@@ -1,15 +1,30 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 export const useFlowEditor = (currentBotId) => {
   const [flowData, setFlowData] = useState({ nodes: [], edges: [] });
   const [editingNode, setEditingNode] = useState(null);
+  const lastBotIdRef = useRef(null);
 
   // Load flow data when bot ID changes
   useEffect(() => {
-    console.log('🔄 Loading flow data for bot:', { currentBotId });
+    console.log('🔄 Bot ID changed:', { 
+      from: lastBotIdRef.current, 
+      to: currentBotId,
+      isNewBot: currentBotId === null,
+      isSwitchingBots: lastBotIdRef.current !== currentBotId
+    });
     
-    if (currentBotId) {
-      // Load existing bot data
+    // Always update the ref to track changes
+    const previousBotId = lastBotIdRef.current;
+    lastBotIdRef.current = currentBotId;
+    
+    if (currentBotId === null) {
+      // New bot - always start completely fresh
+      console.log('🆕 New bot detected - clearing all flow data');
+      setFlowData({ nodes: [], edges: [] });
+    } else if (currentBotId !== previousBotId) {
+      // Switching to a different existing bot
+      console.log('🔄 Switching to existing bot:', currentBotId);
       const storageKey = `chatbot-flow-${currentBotId}`;
       const savedData = localStorage.getItem(storageKey);
       
@@ -26,21 +41,19 @@ export const useFlowEditor = (currentBotId) => {
           setFlowData({ nodes: [], edges: [] });
         }
       } else {
-        console.log('📝 No saved data found, starting with empty flow');
+        console.log('📝 No saved data found for bot, starting with empty flow');
         setFlowData({ nodes: [], edges: [] });
       }
-    } else {
-      // New bot - start with completely empty flow
-      console.log('🆕 New bot - starting with completely empty flow');
-      setFlowData({ nodes: [], edges: [] });
     }
+    // If currentBotId is the same as previous, don't reload (avoid unnecessary re-renders)
   }, [currentBotId]);
 
   const handleFlowDataChange = useCallback((newFlowData) => {
     console.log('🔄 Flow data changed:', {
       nodeCount: newFlowData.nodes?.length || 0,
       edgeCount: newFlowData.edges?.length || 0,
-      currentBotId
+      currentBotId,
+      isNewBot: currentBotId === null
     });
     
     setFlowData(newFlowData);
@@ -49,6 +62,9 @@ export const useFlowEditor = (currentBotId) => {
     if (currentBotId) {
       const storageKey = `chatbot-flow-${currentBotId}`;
       localStorage.setItem(storageKey, JSON.stringify(newFlowData));
+      console.log('💾 Auto-saved to localStorage:', storageKey);
+    } else {
+      console.log('⏭️ Skipping auto-save for new bot (no ID yet)');
     }
   }, [currentBotId]);
 
