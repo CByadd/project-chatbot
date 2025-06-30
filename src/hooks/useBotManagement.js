@@ -5,7 +5,7 @@ export const useBotManagement = () => {
   const [currentBotId, setCurrentBotId] = useState(null);
 
   const handleCreateNewBot = useCallback(() => {
-    console.log('🆕 Creating new bot...');
+    console.log('🆕 Creating new bot - clearing all state...');
     setCurrentBotId(null); // Clear current bot ID for new bot
     setCurrentView('editor');
   }, []);

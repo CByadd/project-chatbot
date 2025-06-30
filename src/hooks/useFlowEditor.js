@@ -30,8 +30,8 @@ export const useFlowEditor = (currentBotId) => {
         setFlowData({ nodes: [], edges: [] });
       }
     } else {
-      // New bot - start with empty flow
-      console.log('🆕 New bot - starting with empty flow');
+      // New bot - start with completely empty flow
+      console.log('🆕 New bot - starting with completely empty flow');
       setFlowData({ nodes: [], edges: [] });
     }
   }, [currentBotId]);
@@ -45,7 +45,7 @@ export const useFlowEditor = (currentBotId) => {
     
     setFlowData(newFlowData);
     
-    // Auto-save to localStorage for current session
+    // Auto-save to localStorage for current session (only if we have a bot ID)
     if (currentBotId) {
       const storageKey = `chatbot-flow-${currentBotId}`;
       localStorage.setItem(storageKey, JSON.stringify(newFlowData));

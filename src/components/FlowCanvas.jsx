@@ -21,6 +21,7 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
   const isInitialized = useRef(false);
   const lastFlowDataRef = useRef(null);
   const updateTimeoutRef = useRef(null);
+  const currentFlowDataId = useRef(null);
 
   // Set default zoom level when component mounts
   useEffect(() => {
@@ -31,28 +32,41 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
   // Initialize or update flow data
   useEffect(() => {
     const flowDataString = JSON.stringify(flowData);
+    const flowDataId = flowData?.id || 'new';
     
-    // Skip if data hasn't changed
-    if (lastFlowDataRef.current === flowDataString) {
+    // Check if this is a completely new flow (different ID or empty)
+    const isNewFlow = currentFlowDataId.current !== flowDataId;
+    
+    // Skip if data hasn't changed and it's not a new flow
+    if (lastFlowDataRef.current === flowDataString && !isNewFlow) {
       return;
     }
     
     lastFlowDataRef.current = flowDataString;
+    currentFlowDataId.current = flowDataId;
     
     console.log('🔄 FlowCanvas data update:', {
       hasNodes: flowData?.nodes?.length > 0,
       nodeCount: flowData?.nodes?.length || 0,
       edgeCount: flowData?.edges?.length || 0,
-      isInitialized: isInitialized.current
+      isNewFlow,
+      flowDataId
     });
+
+    // Reset initialization flag for new flows
+    if (isNewFlow) {
+      isInitialized.current = false;
+    }
 
     if (flowData?.nodes?.length > 0) {
       // Update with provided data
+      console.log('📊 Loading existing flow data');
       setNodes(flowData.nodes);
       setEdges(flowData.edges || []);
       isInitialized.current = true;
     } else if (!isInitialized.current) {
       // Initialize with default trigger node for new flows
+      console.log('🆕 Creating default trigger node for new flow');
       const defaultNodes = [
         {
           id: '1',
@@ -72,6 +86,12 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
       setNodes(defaultNodes);
       setEdges([]);
       isInitialized.current = true;
+    } else if (isNewFlow && flowData?.nodes?.length === 0) {
+      // Clear everything for a new empty flow
+      console.log('🧹 Clearing canvas for new empty flow');
+      setNodes([]);
+      setEdges([]);
+      isInitialized.current = false;
     }
   }, [flowData, setNodes, setEdges]);
 
@@ -96,7 +116,11 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
     // Debounce updates to prevent excessive re-renders
     updateTimeoutRef.current = setTimeout(() => {
       if (onFlowDataChange && isInitialized.current) {
-        const newFlowData = { nodes: newNodes, edges: newEdges };
+        const newFlowData = { 
+          nodes: newNodes, 
+          edges: newEdges,
+          id: currentFlowDataId.current 
+        };
         onFlowDataChange(newFlowData);
       }
     }, 300); // 300ms debounce
