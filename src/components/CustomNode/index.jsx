@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
-import { ButtonNode, CatalogNode, StandardNode } from './NodeTypes';
-import { ButtonNodeHandles, CatalogNodeHandles, StandardNodeHandles } from './NodeHandles';
+import { ButtonNode, CatalogNode, StandardNode, ListNode } from './NodeTypes';
+import { ButtonNodeHandles, CatalogNodeHandles, StandardNodeHandles, ListNodeHandles } from './NodeHandles';
 
 const CustomNode = memo(({ id, data, selected, onEdit, onDelete }) => {
   const handleDoubleClick = (e) => {
@@ -51,6 +51,20 @@ const CustomNode = memo(({ id, data, selected, onEdit, onDelete }) => {
           catalogItems={data.catalog?.items || []} 
           hasTitle={!!data.catalog?.title} 
         />
+      </div>
+    );
+  }
+
+  // Special rendering for list nodes
+  if (data.type === 'list') {
+    return (
+      <div onDoubleClick={handleDoubleClick}>
+        <ListNode 
+          data={data} 
+          onEdit={handleEditClick} 
+          onDelete={handleDeleteClick} 
+        />
+        <ListNodeHandles listButtons={data.listButtons || []} />
       </div>
     );
   }

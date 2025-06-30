@@ -5,6 +5,7 @@ import NodeSelector from './NodeSelector';
 import ComponentSelector from './ComponentSelector';
 import ButtonEditor from './ButtonEditor';
 import CatalogEditor from './CatalogEditor';
+import ListEditor from './ListEditor';
 import StandardNodeEditor from './StandardNodeEditor';
 import NodeContainerEditor from './NodeContainerEditor';
 
@@ -52,6 +53,15 @@ const NodeEditor = ({ nodeId, nodeData, onClose }) => {
             : button
         )
       }));
+    } else if (selectorType === 'list' && selectedButtonIndex !== null) {
+      setFormData(prev => ({
+        ...prev,
+        listButtons: prev.listButtons?.map((listButton, btnIndex) =>
+          btnIndex === selectedButtonIndex
+            ? { ...listButton, nextNodeId: targetNodeId }
+            : listButton
+        )
+      }));
     } else if (selectorType === 'trigger' || selectorType === 'next') {
       setFormData(prev => ({
         ...prev,
@@ -84,7 +94,7 @@ const NodeEditor = ({ nodeId, nodeData, onClose }) => {
       image: { text: 'Enter text', imageUrl: '' },
       video: { text: 'Enter text', videoUrl: '' },
       document: { text: 'Enter text', documentUrl: '' },
-      list: { text: 'Enter text', listItems: ['Item 1', 'Item 2'] },
+      list: { text: 'Enter text', listButtons: [{ label: 'Item 1', nextNodeId: '' }, { label: 'Item 2', nextNodeId: '' }] },
       catalog: { text: 'Enter text', catalog: { title: 'Catalog Title', items: ['Product 1', 'Product 2'] } }
     };
     return defaults[type] || defaults.text;
@@ -94,7 +104,8 @@ const NodeEditor = ({ nodeId, nodeData, onClose }) => {
     console.log('💾 Saving node changes:', {
       nodeId,
       nodeType: nodeData.type,
-      hasComponents: formData.components?.length > 0
+      hasComponents: formData.components?.length > 0,
+      hasListButtons: formData.listButtons?.length > 0
     });
 
     setNodes((nodes) =>
@@ -134,6 +145,17 @@ const NodeEditor = ({ nodeId, nodeData, onClose }) => {
         <CatalogEditor
           formData={formData}
           setFormData={setFormData}
+        />
+      );
+    }
+
+    // Special handling for list nodes
+    if (nodeType === 'list') {
+      return (
+        <ListEditor
+          formData={formData}
+          setFormData={setFormData}
+          onOpenNodeSelector={openNodeSelector}
         />
       );
     }

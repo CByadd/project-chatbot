@@ -87,6 +87,49 @@ export const CatalogNodeHandles = ({ catalogItems, hasTitle }) => {
   );
 };
 
+export const ListNodeHandles = ({ listButtons }) => {
+  return (
+    <>
+      <Handle type="target" position={Position.Left} className="w-3 h-3 bg-gray-400" />
+      
+      {/* Individual output handles for list buttons */}
+      {listButtons.length > 0 && (
+        <>
+          {listButtons.map((listItem, index) => (
+            <Handle
+              key={`list-${index}`}
+              type="source"
+              position={Position.Right}
+              id={`list-${index}`}
+              className="w-3 h-3 bg-blue-400 hover:bg-blue-500 transition-colors"
+              style={{
+                top: `${120 + (index * 52) + 26}px`,
+                right: '-6px'
+              }}
+            />
+          ))}
+        </>
+      )}
+
+      {/* Default output handles for empty list nodes */}
+      {listButtons.length === 0 && (
+        <>
+          {[0, 1, 2].map((index) => (
+            <Handle 
+              key={`list-${index}`}
+              type="source" 
+              position={Position.Right} 
+              id={`list-${index}`}
+              className="w-3 h-3 bg-gray-300" 
+              style={{ top: `${120 + (index * 52) + 26}px`, right: '-6px' }}
+            />
+          ))}
+        </>
+      )}
+    </>
+  );
+};
+
 export const StandardNodeHandles = () => {
   return (
     <>

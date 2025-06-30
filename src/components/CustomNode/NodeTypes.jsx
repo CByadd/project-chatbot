@@ -190,6 +190,97 @@ export const CatalogNode = ({
   );
 };
 
+export const ListNode = ({ 
+  data, 
+  onEdit, 
+  onDelete 
+}) => {
+  const listButtons = data.listButtons || [];
+  
+  return (
+    <div className="bg-white border-2 border-gray-200 rounded-xl shadow-lg min-w-[250px] sm:min-w-[280px] max-w-[320px] relative group">
+      {/* Delete button */}
+      <button
+        onClick={onDelete}
+        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-10 shadow-md"
+        title="Delete node"
+      >
+        <Icons.X size={14} />
+      </button>
+
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-100">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+            <Icons.List size={14} className="text-yellow-600 sm:w-4 sm:h-4" />
+          </div>
+          <span className="font-semibold text-gray-900 text-sm sm:text-base">Interactive List</span>
+        </div>
+        <button
+          onClick={onEdit}
+          className="w-5 h-5 sm:w-6 sm:h-6 bg-yellow-500 text-white rounded-md flex items-center justify-center hover:bg-yellow-600 transition-colors"
+        >
+          <Icons.Plus size={12} className="sm:w-3.5 sm:h-3.5" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="p-3 sm:p-4">
+        <div className="text-xs sm:text-sm text-gray-600 mb-3">
+          {data.text || 'Choose from the list:'}
+        </div>
+        
+        {/* List Items */}
+        <div className="space-y-2">
+          {listButtons.length > 0 ? (
+            listButtons.map((listItem, index) => (
+              <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg border border-gray-200 relative">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span className="text-xs sm:text-sm text-gray-700 truncate">
+                    {listItem.label || 'List item'}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <div className="text-xs text-gray-400">
+                    {listItem.label ? `${listItem.label.length}/30` : '0/30'}
+                  </div>
+                  <div className="w-3 h-3 bg-blue-400 rounded-full border-2 border-white shadow-sm"></div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <>
+              {[0, 1, 2].map((index) => (
+                <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                    <span className="text-xs sm:text-sm text-gray-400">List item {index + 1}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="text-xs text-gray-400">0/30</div>
+                    <div className="w-3 h-3 bg-gray-300 rounded-full border-2 border-white"></div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+
+        {/* Add item button */}
+        <div className="flex justify-end mt-3">
+          <button
+            onClick={onEdit}
+            className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition-colors shadow-md"
+          >
+            <Icons.Plus size={14} className="sm:w-4 sm:h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const StandardNode = ({ 
   id,
   data, 
@@ -352,10 +443,10 @@ export const StandardNode = ({
             </div>
           )}
           
-          {data.listItems && data.listItems.length > 0 && (
+          {data.listButtons && data.listButtons.length > 0 && (
             <div className="text-xs">
-              <span className="font-medium text-yellow-700">List:</span>
-              <span className="ml-1 text-gray-600">{data.listItems.length} items</span>
+              <span className="font-medium text-yellow-700">List Items:</span>
+              <span className="ml-1 text-gray-600">{data.listButtons.length} items</span>
             </div>
           )}
 
