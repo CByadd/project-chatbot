@@ -17,11 +17,10 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { screenToFlowPosition, setViewport } = useReactFlow();
   
-  // Refs to prevent unnecessary re-renders and edge updates
-  const isUpdatingEdges = useRef(false);
-  const lastConnectionsRef = useRef('');
-  const edgeUpdateTimeoutRef = useRef(null);
-
+  // Refs to prevent unnecessary re-renders
+  const isInitialized = useRef(false);
+  const lastFlowDataRef = useRef(null);
+  const updateTimeoutRef = useRef(null);
 
   // Set default zoom level when component mounts
   useEffect(() => {
@@ -29,48 +28,52 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
     console.log('🎯 FlowCanvas initialized with default viewport');
   }, [setViewport]);
 
+  // Initialize or update flow data
+  useEffect(() => {
+    const flowDataString = JSON.stringify(flowData);
+    
+    // Skip if data hasn't changed
+    if (lastFlowDataRef.current === flowDataString) {
+      return;
+    }
+    
+    lastFlowDataRef.current = flowDataString;
+    
+    console.log('🔄 FlowCanvas data update:', {
+      hasNodes: flowData?.nodes?.length > 0,
+      nodeCount: flowData?.nodes?.length || 0,
+      edgeCount: flowData?.edges?.length || 0,
+      isInitialized: isInitialized.current
+    });
 
-
-
-
-  const isInitialized = useRef(false);
-
-useEffect(() => {
-  if (!isInitialized.current && flowData?.nodes?.length > 0) {
-    setNodes(() => [...flowData.nodes]);
-    setEdges(() => [...flowData.edges]);
-    isInitialized.current = true;
-  }
-
-  if (!isInitialized.current && (!flowData?.nodes || flowData.nodes.length === 0)) {
-    setNodes([
-      {
-        id: '1',
-        type: 'custom',
-        position: { x: 400, y: 100 },
-        data: {
-          label: 'Welcome Trigger',
-          type: 'trigger',
-          description: 'Start Flow',
-          trigger: 'hi,hello,start',
-          text: '',
-          messageType: 'trigger',
-          nextNodeId: ''
-        },
-      }
-    ]);
-    setEdges([]);
-    isInitialized.current = true;
-  }
-}, [flowData, setNodes, setEdges]);
-
-// If switching bots, reset:
-useEffect(() => {
-  isInitialized.current = false;
-}, [flowData?.id]);
-
-
-    console.log('🧠 Incoming flowData prop:', flowData);
+    if (flowData?.nodes?.length > 0) {
+      // Update with provided data
+      setNodes(flowData.nodes);
+      setEdges(flowData.edges || []);
+      isInitialized.current = true;
+    } else if (!isInitialized.current) {
+      // Initialize with default trigger node for new flows
+      const defaultNodes = [
+        {
+          id: '1',
+          type: 'custom',
+          position: { x: 400, y: 100 },
+          data: {
+            label: 'Welcome Trigger',
+            type: 'trigger',
+            description: 'Start Flow',
+            trigger: 'hi,hello,start',
+            text: '',
+            messageType: 'trigger',
+            nextNodeId: ''
+          },
+        }
+      ];
+      setNodes(defaultNodes);
+      setEdges([]);
+      isInitialized.current = true;
+    }
+  }, [flowData, setNodes, setEdges]);
 
   // Stable node types definition
   const nodeTypes = useMemo(() => ({ 
@@ -83,266 +86,150 @@ useEffect(() => {
     )
   }), [onNodeEdit]);
 
-  // Convert ReactFlow format to clean JSON format
-  const convertToCleanFormat = useCallback((nodes, edges) => {
-    console.log('🔄 Converting flow to clean format:', {
-      inputNodes: nodes.length,
-      inputEdges: edges.length
-    });
-
-    const processedNodeIds = new Set();
+  // Debounced flow data update to parent
+  const notifyFlowDataChange = useCallback((newNodes, newEdges) => {
+    // Clear existing timeout
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
     
-    const result = {
-      nodes: nodes.map(node => {
-        if (processedNodeIds.has(node.id)) {
-          return null;
-        }
+    // Debounce updates to prevent excessive re-renders
+    updateTimeoutRef.current = setTimeout(() => {
+      if (onFlowDataChange && isInitialized.current) {
+        const newFlowData = { nodes: newNodes, edges: newEdges };
+        onFlowDataChange(newFlowData);
+      }
+    }, 300); // 300ms debounce
+  }, [onFlowDataChange]);
 
-        const cleanNode = {
-          id: node.id,
-          type: node.data.type === 'trigger' ? 'start' : node.data.type,
-          data: {},
-          position: node.position
-        };
-
-        // For trigger nodes, merge with connected node data
-        if (node.data.type === 'trigger') {
-          if (node.data.trigger) {
-            cleanNode.data.trigger = node.data.trigger;
-          }
-          
-          if (node.data.nextNodeId) {
-            const connectedNode = nodes.find(n => n.id === node.data.nextNodeId);
-            if (connectedNode) {
-              processedNodeIds.add(connectedNode.id);
-              
-              // Merge ALL data from the connected node
-              Object.assign(cleanNode.data, {
-                text: connectedNode.data.text,
-                messageType: connectedNode.data.messageType,
-                imageUrl: connectedNode.data.imageUrl,
-                videoUrl: connectedNode.data.videoUrl,
-                documentUrl: connectedNode.data.documentUrl,
-                listItems: connectedNode.data.listItems?.filter(item => item && item.trim() !== ''),
-                buttons: connectedNode.data.buttons?.map(button => ({
-                  label: button.label,
-                  nextNodeId: button.nextNodeId,
-                  type: 'reply'
-                })).filter(button => button.label && button.label.trim() !== ''),
-                catalog: connectedNode.data.catalog?.items?.length > 0 ? {
-                  title: connectedNode.data.catalog.title || 'Catalog',
-                  items: connectedNode.data.catalog.items.filter(item => item && item.trim() !== '')
-                } : undefined,
-                nextNodeId: connectedNode.data.nextNodeId
-              });
-            }
-          }
-          return cleanNode;
-        }
-
-        // For non-trigger nodes, add their data normally
-        Object.assign(cleanNode.data, {
-          text: node.data.text,
-          messageType: node.data.messageType,
-          imageUrl: node.data.imageUrl,
-          videoUrl: node.data.videoUrl,
-          documentUrl: node.data.documentUrl,
-          listItems: node.data.listItems?.filter(item => item && item.trim() !== ''),
-          buttons: node.data.buttons?.map(button => ({
-            label: button.label,
-            nextNodeId: button.nextNodeId,
-            type: 'reply'
-          })).filter(button => button.label && button.label.trim() !== ''),
-          catalog: node.data.catalog?.items?.length > 0 ? {
-            title: node.data.catalog.title || 'Catalog',
-            items: node.data.catalog.items.filter(item => item && item.trim() !== '')
-          } : undefined,
-          nextNodeId: node.data.nextNodeId
-        });
-
-        return cleanNode;
-      }).filter(node => {
-        if (!node) return false;
-        if (node.type === 'start') {
-          return node.data.trigger;
-        }
-        return Object.keys(node.data).length > 0;
-      })
-    };
-
-    console.log('✅ Clean format conversion completed:', {
-      outputNodes: result.nodes.length,
-      mergedNodes: processedNodeIds.size
-    });
-
-    return result;
-  }, []);
-
-  // Notify parent component when flow data changes
+  // Update parent when nodes or edges change
   useEffect(() => {
-    if (onFlowDataChange && isInitialized.current) {
-      const cleanFormat = convertToCleanFormat(nodes, edges);
-      onFlowDataChange({ nodes, edges });
+    if (isInitialized.current) {
+      notifyFlowDataChange(nodes, edges);
     }
-  }, [nodes, edges, onFlowDataChange, convertToCleanFormat]);
-
-  // Debounced edge update function
-  const updateEdgesFromConnections = useCallback(() => {
-    if (isUpdatingEdges.current) return;
-    
-    // Clear any pending timeout
-    if (edgeUpdateTimeoutRef.current) {
-      clearTimeout(edgeUpdateTimeoutRef.current);
-    }
-    
-    // Debounce edge updates to prevent rapid re-renders
-    edgeUpdateTimeoutRef.current = setTimeout(() => {
-      isUpdatingEdges.current = true;
-      
-      console.log('🔗 Updating edges from connections...');
-      
-      const newEdges = [];
-      
-      nodes.forEach(node => {
-        // Handle trigger auto-flow connections
-        if (node.data.type === 'trigger' && node.data.nextNodeId) {
-          const targetNode = nodes.find(n => n.id === node.data.nextNodeId);
-          if (targetNode) {
-            newEdges.push({
-              id: `${node.id}-trigger-${node.data.nextNodeId}`,
-              source: node.id,
-              target: node.data.nextNodeId,
-              type: 'default',
-              animated: true,
-              style: { stroke: '#10B981', strokeWidth: 3 },
-              label: 'Merges Data'
-            });
-          }
-        }
-
-        // Handle button connections
-        if (node.data.buttons) {
-          node.data.buttons.forEach((button, index) => {
-            if (button.nextNodeId) {
-              const targetNode = nodes.find(n => n.id === button.nextNodeId);
-              if (targetNode) {
-                newEdges.push({
-                  id: `${node.id}-button-${index}-${button.nextNodeId}`,
-                  source: node.id,
-                  target: button.nextNodeId,
-                  sourceHandle: `button-${index}`,
-                  type: 'default',
-                  animated: true,
-                  style: { stroke: '#8B5CF6', strokeWidth: 2 },
-                  label: button.label
-                });
-              }
-            }
-          });
-        }
-        
-        // Handle catalog connections
-        if (node.data.catalog && node.data.catalog.connections) {
-          Object.entries(node.data.catalog.connections).forEach(([index, targetNodeId]) => {
-            if (targetNodeId) {
-              const targetNode = nodes.find(n => n.id === targetNodeId);
-              if (targetNode) {
-                newEdges.push({
-                  id: `${node.id}-catalog-${index}-${targetNodeId}`,
-                  source: node.id,
-                  target: targetNodeId,
-                  sourceHandle: `catalog-${index}`,
-                  type: 'default',
-                  animated: true,
-                  style: { stroke: '#6366F1', strokeWidth: 2 }
-                });
-              }
-            }
-          });
-        }
-
-        // Handle standard nextNodeId for other node types
-        if (node.data.type !== 'trigger' && node.data.type !== 'button' && node.data.type !== 'catalog' && node.data.nextNodeId) {
-          const targetNode = nodes.find(n => n.id === node.data.nextNodeId);
-          if (targetNode) {
-            newEdges.push({
-              id: `${node.id}-next-${node.data.nextNodeId}`,
-              source: node.id,
-              target: node.data.nextNodeId,
-              type: 'default',
-              animated: true,
-              style: { stroke: '#6B7280', strokeWidth: 2 }
-            });
-          }
-        }
-      });
-      
-      console.log('✅ Edge update completed:', {
-        totalEdges: newEdges.length,
-        edgeTypes: {
-          trigger: newEdges.filter(e => e.id.includes('-trigger-')).length,
-          button: newEdges.filter(e => e.id.includes('-button-')).length,
-          catalog: newEdges.filter(e => e.id.includes('-catalog-')).length,
-          autoFlow: newEdges.filter(e => e.id.includes('-next-')).length
-        }
-      });
-      
-      // Update edges state
-      setEdges(currentEdges => {
-        const currentConnectionEdges = currentEdges.filter(edge => 
-          edge.id.includes('-button-') || edge.id.includes('-catalog-') || 
-          edge.id.includes('-trigger-') || edge.id.includes('-next-')
-        );
-        const manualEdges = currentEdges.filter(edge => 
-          !edge.id.includes('-button-') && !edge.id.includes('-catalog-') &&
-          !edge.id.includes('-trigger-') && !edge.id.includes('-next-')
-        );
-        
-        // Check if connection edges changed
-        const edgesChanged = currentConnectionEdges.length !== newEdges.length ||
-          !newEdges.every(newEdge => 
-            currentConnectionEdges.some(currentEdge => currentEdge.id === newEdge.id)
-          );
-        
-        if (edgesChanged) {
-          console.log('🔄 Edges updated in state');
-          return [...manualEdges, ...newEdges];
-        }
-        
-        return currentEdges;
-      });
-      
-      isUpdatingEdges.current = false;
-    }, 100); // 100ms debounce
-  }, [nodes, setEdges]);
-
-  // Only update edges when connections actually change
-  useEffect(() => {
-    const currentConnections = JSON.stringify(
-      nodes.map(node => ({
-        id: node.id,
-        type: node.data.type,
-        nextNodeId: node.data.nextNodeId || '',
-        buttons: node.data.buttons?.map(b => ({ label: b.label, nextNodeId: b.nextNodeId })) || [],
-        catalog: node.data.catalog?.connections || {}
-      }))
-    );
-    
-    if (currentConnections !== lastConnectionsRef.current) {
-      console.log('🔄 Node connections changed, updating edges...');
-      lastConnectionsRef.current = currentConnections;
-      updateEdgesFromConnections();
-    }
-  }, [nodes, updateEdgesFromConnections]);
+  }, [nodes, edges, notifyFlowDataChange]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
-      if (edgeUpdateTimeoutRef.current) {
-        clearTimeout(edgeUpdateTimeoutRef.current);
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
       }
     };
   }, []);
+
+  // Optimized edge update function
+  const updateEdgesFromConnections = useCallback(() => {
+    console.log('🔗 Updating edges from node connections...');
+    
+    const newEdges = [];
+    
+    nodes.forEach(node => {
+      // Handle trigger auto-flow connections
+      if (node.data.type === 'trigger' && node.data.nextNodeId) {
+        const targetNode = nodes.find(n => n.id === node.data.nextNodeId);
+        if (targetNode) {
+          newEdges.push({
+            id: `${node.id}-trigger-${node.data.nextNodeId}`,
+            source: node.id,
+            target: node.data.nextNodeId,
+            type: 'default',
+            animated: true,
+            style: { stroke: '#10B981', strokeWidth: 3 },
+            label: 'Merges Data'
+          });
+        }
+      }
+
+      // Handle button connections
+      if (node.data.buttons) {
+        node.data.buttons.forEach((button, index) => {
+          if (button.nextNodeId) {
+            const targetNode = nodes.find(n => n.id === button.nextNodeId);
+            if (targetNode) {
+              newEdges.push({
+                id: `${node.id}-button-${index}-${button.nextNodeId}`,
+                source: node.id,
+                target: button.nextNodeId,
+                sourceHandle: `button-${index}`,
+                type: 'default',
+                animated: true,
+                style: { stroke: '#8B5CF6', strokeWidth: 2 },
+                label: button.label
+              });
+            }
+          }
+        });
+      }
+      
+      // Handle catalog connections
+      if (node.data.catalog && node.data.catalog.connections) {
+        Object.entries(node.data.catalog.connections).forEach(([index, targetNodeId]) => {
+          if (targetNodeId) {
+            const targetNode = nodes.find(n => n.id === targetNodeId);
+            if (targetNode) {
+              newEdges.push({
+                id: `${node.id}-catalog-${index}-${targetNodeId}`,
+                source: node.id,
+                target: targetNodeId,
+                sourceHandle: `catalog-${index}`,
+                type: 'default',
+                animated: true,
+                style: { stroke: '#6366F1', strokeWidth: 2 }
+              });
+            }
+          }
+        });
+      }
+
+      // Handle standard nextNodeId for other node types
+      if (node.data.type !== 'trigger' && node.data.type !== 'button' && node.data.type !== 'catalog' && node.data.nextNodeId) {
+        const targetNode = nodes.find(n => n.id === node.data.nextNodeId);
+        if (targetNode) {
+          newEdges.push({
+            id: `${node.id}-next-${node.data.nextNodeId}`,
+            source: node.id,
+            target: node.data.nextNodeId,
+            type: 'default',
+            animated: true,
+            style: { stroke: '#6B7280', strokeWidth: 2 }
+          });
+        }
+      }
+    });
+    
+    // Update edges only if they've actually changed
+    setEdges(currentEdges => {
+      const connectionEdges = newEdges;
+      const manualEdges = currentEdges.filter(edge => 
+        !edge.id.includes('-button-') && !edge.id.includes('-catalog-') &&
+        !edge.id.includes('-trigger-') && !edge.id.includes('-next-')
+      );
+      
+      const combinedEdges = [...manualEdges, ...connectionEdges];
+      
+      // Only update if edges have actually changed
+      if (JSON.stringify(currentEdges) !== JSON.stringify(combinedEdges)) {
+        console.log('✅ Edges updated:', {
+          total: combinedEdges.length,
+          manual: manualEdges.length,
+          connections: connectionEdges.length
+        });
+        return combinedEdges;
+      }
+      
+      return currentEdges;
+    });
+  }, [nodes, setEdges]);
+
+  // Update edges when node connections change (debounced)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      updateEdgesFromConnections();
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [updateEdgesFromConnections]);
 
   const onConnect = useCallback((params) => {
     console.log('🔗 Connection attempt:', params);
@@ -473,19 +360,18 @@ useEffect(() => {
     console.log('✅ Node deleted and references cleaned up');
   }, [setNodes, setEdges]);
 
-  // Stable nodes change handler
+  // Optimized nodes change handler
   const handleNodesChange = useCallback((changes) => {
-    // Allow position and selection changes without triggering edge updates
-    const isPositionOrSelectionChange = changes.every(change => 
-      change.type === 'position' || change.type === 'select' || change.type === 'dimensions'
+    // Only log non-position changes to reduce noise
+    const nonPositionChanges = changes.filter(change => 
+      change.type !== 'position' && change.type !== 'dimensions'
     );
     
-    if (isPositionOrSelectionChange) {
-      onNodesChange(changes);
-    } else {
-      console.log('📝 Node changes:', changes);
-      onNodesChange(changes);
+    if (nonPositionChanges.length > 0) {
+      console.log('📝 Node changes:', nonPositionChanges);
     }
+    
+    onNodesChange(changes);
   }, [onNodesChange]);
 
   // Stable drag handlers
@@ -508,11 +394,7 @@ useEffect(() => {
       y: event.clientY,
     });
 
-    console.log('➕ Adding new node:', {
-      type,
-      position,
-      timestamp: new Date().toISOString()
-    });
+    console.log('➕ Adding new node:', { type, position });
 
     const getNodeData = (nodeType) => {
       const nodeConfigs = {
@@ -612,18 +494,12 @@ useEffect(() => {
     };
 
     setNodes((nds) => nds.concat(newNode));
-
-    console.log('✅ Node added successfully:', {
-      id: newNode.id,
-      type: newNode.data.type,
-      label: newNode.data.label
-    });
+    console.log('✅ Node added successfully:', { id: newNode.id, type: newNode.data.type });
   }, [screenToFlowPosition, setNodes]);
 
   return (
     <div className="w-full h-full">
       <ReactFlow
-        key={JSON.stringify(flowData)}
         nodes={nodes}
         edges={edges}
         onNodesChange={handleNodesChange}

@@ -29,7 +29,8 @@ export const useBotSaving = (currentBotId, flowData) => {
       botName,
       saveToCloud,
       currentBotId,
-      nodeCount: flowData.nodes.length
+      nodeCount: flowData.nodes.length,
+      isNewBot: !currentBotId
     });
 
     if (!saveToCloud) {
@@ -65,7 +66,8 @@ export const useBotSaving = (currentBotId, flowData) => {
       console.log('✅ Local save completed:', {
         botId,
         botName,
-        storageKey
+        storageKey,
+        isNewBot: !currentBotId
       });
       
       setShowDatabaseSaveModal(false);
@@ -76,17 +78,53 @@ export const useBotSaving = (currentBotId, flowData) => {
 
     try {
       clearDbError();
+      
+      // Ensure we have valid flow data
+      if (!flowData || !flowData.nodes || flowData.nodes.length === 0) {
+        throw new Error('Cannot save empty flow. Please add at least one node.');
+      }
+      
       const result = await saveFlowToDatabase(flowData, botName, currentBotId);
       
       // Also save locally as backup
       const botId = result.id || currentBotId;
-      const storageKey = `chatbot-flow-${botId}`;
-      localStorage.setItem(storageKey, JSON.stringify(flowData));
-      localStorage.setItem(`chatbot-name-${botId}`, botName);
+      if (botId) {
+        const storageKey = `chatbot-flow-${botId}`;
+        localStorage.setItem(storageKey, JSON.stringify(flowData));
+        localStorage.setItem(`chatbot-name-${botId}`, botName);
+        
+        // Update saved bots list
+        const savedBots = JSON.parse(localStorage.getItem('saved-bots') || '[]');
+        const existingBotIndex = savedBots.findIndex((bot) => bot.id === botId);
+        
+        const botData = {
+          id: botId,
+          name: botName,
+          description: result.description || `Chatbot flow with ${flowData.nodes.length} nodes`,
+          status: result.status || 'draft',
+          lastModified: result.lastModified || new Date().toISOString(),
+          messageCount: result.messageCount || 0,
+          flowNodes: flowData.nodes.length
+        };
+        
+        if (existingBotIndex >= 0) {
+          savedBots[existingBotIndex] = { ...savedBots[existingBotIndex], ...botData };
+        } else {
+          savedBots.push(botData);
+        }
+        
+        localStorage.setItem('saved-bots', JSON.stringify(savedBots));
+      }
       
       setShowDatabaseSaveModal(false);
       setSavedBotName(botName);
       setShowSaveModal(true);
+      
+      console.log('✅ Database save completed successfully:', {
+        botId: result.id,
+        isNewBot: !currentBotId,
+        name: botName
+      });
       
       return result;
     } catch (error) {

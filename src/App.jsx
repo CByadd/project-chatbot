@@ -25,6 +25,7 @@ function App() {
     currentView,
     currentBotId,
     setCurrentBotId,
+    updateCurrentBotId,
     handleCreateNewBot,
     handleEditBot,
     handleBackToManagement
@@ -116,7 +117,7 @@ function App() {
       
       // Update current bot ID if this was a new bot
       if (result?.id && !currentBotId) {
-        setCurrentBotId(result.id);
+        updateCurrentBotId(result.id);
         console.log('🆔 Bot ID updated after save:', result.id);
       }
       
@@ -125,7 +126,7 @@ function App() {
       // Error is already handled in the hook
       throw error;
     }
-  }, [handleDatabaseSave, currentBotId, setCurrentBotId]);
+  }, [handleDatabaseSave, currentBotId, updateCurrentBotId]);
 
   // Render appropriate view
   if (currentView === 'management') {
