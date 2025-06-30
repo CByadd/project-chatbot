@@ -6,8 +6,15 @@ export const useBotManagement = () => {
 
   const handleCreateNewBot = useCallback(() => {
     console.log('🆕 Creating new bot - clearing all state...');
-    setCurrentBotId(null); // Clear current bot ID for new bot
-    setCurrentView('editor');
+    
+    // Force clear current bot ID first
+    setCurrentBotId(null);
+    
+    // Small delay to ensure state is cleared before switching views
+    setTimeout(() => {
+      setCurrentView('editor');
+      console.log('✅ Switched to editor view for new bot');
+    }, 50);
   }, []);
 
   const handleEditBot = useCallback((botId) => {
