@@ -161,6 +161,27 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
           }
         });
       }
+
+      // Handle list button connections
+      if (node.data.listButtons) {
+        node.data.listButtons.forEach((listButton, index) => {
+          if (listButton.nextNodeId) {
+            const targetNode = nodes.find(n => n.id === listButton.nextNodeId);
+            if (targetNode) {
+              newEdges.push({
+                id: `${node.id}-list-${index}-${listButton.nextNodeId}`,
+                source: node.id,
+                target: listButton.nextNodeId,
+                sourceHandle: `list-${index}`,
+                type: 'default',
+                animated: true,
+                style: { stroke: '#EAB308', strokeWidth: 2 },
+                label: listButton.label
+              });
+            }
+          }
+        });
+      }
       
       // Handle catalog connections
       if (node.data.catalog && node.data.catalog.connections) {
@@ -183,7 +204,7 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
       }
 
       // Handle standard nextNodeId for other node types
-      if (node.data.type !== 'trigger' && node.data.type !== 'button' && node.data.type !== 'catalog' && node.data.nextNodeId) {
+      if (node.data.type !== 'trigger' && node.data.type !== 'button' && node.data.type !== 'catalog' && node.data.type !== 'list' && node.data.nextNodeId) {
         const targetNode = nodes.find(n => n.id === node.data.nextNodeId);
         if (targetNode) {
           newEdges.push({
@@ -203,7 +224,7 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
       const connectionEdges = newEdges;
       const manualEdges = currentEdges.filter(edge => 
         !edge.id.includes('-button-') && !edge.id.includes('-catalog-') &&
-        !edge.id.includes('-trigger-') && !edge.id.includes('-next-')
+        !edge.id.includes('-trigger-') && !edge.id.includes('-next-') && !edge.id.includes('-list-')
       );
       
       const combinedEdges = [...manualEdges, ...connectionEdges];
@@ -253,6 +274,34 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
               data: {
                 ...node.data,
                 buttons: updatedButtons
+              }
+            };
+          }
+          return node;
+        })
+      );
+      return;
+    }
+
+    // Handle list button connections
+    if (params.sourceHandle && params.sourceHandle.startsWith('list-')) {
+      const listIndex = parseInt(params.sourceHandle.split('-')[1]);
+      
+      setNodes((nodes) =>
+        nodes.map((node) => {
+          if (node.id === params.source && node.data.listButtons) {
+            const updatedListButtons = [...node.data.listButtons];
+            if (updatedListButtons[listIndex]) {
+              updatedListButtons[listIndex] = {
+                ...updatedListButtons[listIndex],
+                nextNodeId: params.target
+              };
+            }
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                listButtons: updatedListButtons
               }
             };
           }
@@ -334,6 +383,15 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
             nextNodeId: button.nextNodeId === nodeId ? '' : button.nextNodeId
           }));
           updatedNode.data = { ...updatedNode.data, buttons: updatedButtons };
+        }
+
+        // Remove from list button connections
+        if (node.data.listButtons) {
+          const updatedListButtons = node.data.listButtons.map(listButton => ({
+            ...listButton,
+            nextNodeId: listButton.nextNodeId === nodeId ? '' : listButton.nextNodeId
+          }));
+          updatedNode.data = { ...updatedNode.data, listButtons: updatedListButtons };
         }
         
         // Remove from catalog connections
@@ -447,7 +505,7 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
           description: 'Interactive list',
           messageType: 'list',
           text: 'Choose from the list:',
-          listItems: [],
+          listButtons: [],
           nextNodeId: ''
         },
         button: { 
