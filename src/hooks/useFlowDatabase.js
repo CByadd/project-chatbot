@@ -162,9 +162,9 @@ export const useFlowDatabase = () => {
     try {
       const flows = await flowAPI.getFlows();
       
-      console.log('✅ Load all flows completed:', {
-        count: flows.length
-      });
+      console.log('✅ Load all flows completed:', 
+         flows
+      );
       
       setConnectionStatus('connected');
       return flows;

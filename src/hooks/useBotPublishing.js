@@ -5,13 +5,11 @@ export const useBotPublishing = (currentBotId) => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState(null);
 
-  const { publishFlow } = useFlowDatabase();
+  const { publishFlow, unpublishFlow } = useFlowDatabase();
 
-  const handlePublish = useCallback(async () => {
-    console.log('🚀 Publish requested:', { currentBotId });
-
+  const handleTogglePublish = useCallback(async (currentStatus) => {
     if (!currentBotId) {
-      console.warn('⚠️ Cannot publish: No bot ID');
+      console.warn('⚠️ No bot ID provided');
       alert('Please save the flow first before publishing');
       return;
     }
@@ -20,20 +18,26 @@ export const useBotPublishing = (currentBotId) => {
     setPublishError(null);
 
     try {
-      await publishFlow(currentBotId);
-      console.log('✅ Flow published successfully');
-      alert('Flow published successfully!');
+      if (currentStatus === 'active') {
+        await unpublishFlow(currentBotId);
+        console.log('🚫 Unpublished bot:', currentBotId);
+        alert('Bot unpublished successfully');
+      } else {
+        await publishFlow(currentBotId);
+        console.log('✅ Published bot:', currentBotId);
+        alert('Bot published successfully');
+      }
     } catch (error) {
-      console.error('❌ Publish failed:', error);
+      console.error('❌ Toggle publish failed:', error);
       setPublishError(error.message);
     } finally {
       setIsPublishing(false);
     }
-  }, [currentBotId, publishFlow]);
+  }, [currentBotId, publishFlow, unpublishFlow]);
 
   return {
     isPublishing,
     publishError,
-    handlePublish
+    handleTogglePublish // ✅ ensure this is returned
   };
 };

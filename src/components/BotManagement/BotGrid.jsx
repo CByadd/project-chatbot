@@ -54,6 +54,7 @@ const BotGrid = ({
       {bots.map((bot) => (
         <BotCard
           key={bot.id}
+        
           bot={bot}
           onEdit={onEditBot}
           onDelete={onDeleteBot}
