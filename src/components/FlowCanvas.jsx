@@ -473,11 +473,11 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
 
     const getNodeData = (nodeType) => {
       const nodeConfigs = {
-        node: {
-          label: 'Node Container',
-          description: 'Multi-component container',
-          components: []
-        },
+        // node: {
+        //   label: 'Node Container',
+        //   description: 'Multi-component container',
+        //   components: []
+        // },
         trigger: { 
           label: 'Trigger', 
           description: 'Trigger keywords only',
@@ -535,24 +535,24 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
             { label: 'Option 2', description: '', imageUrl: '', nextNodeId: '' }
           ]
         },
-        catalog: { 
-          label: 'Catalog', 
-          description: 'Product catalog',
-          messageType: 'catalog',
-          text: 'Browse our catalog:',
-          catalog: { 
-            title: 'Product Catalog', 
-            items: ['Product 1', 'Product 2', 'Product 3'],
-            connections: {}
-          }
-        },
-        template: { 
-          label: 'Template', 
-          description: 'Message template',
-          messageType: 'text',
-          text: 'Template message...',
-          nextNodeId: ''
-        }
+        // catalog: { 
+        //   label: 'Catalog', 
+        //   description: 'Product catalog',
+        //   messageType: 'catalog',
+        //   text: 'Browse our catalog:',
+        //   catalog: { 
+        //     title: 'Product Catalog', 
+        //     items: ['Product 1', 'Product 2', 'Product 3'],
+        //     connections: {}
+        //   }
+        // },
+        // template: { 
+        //   label: 'Template', 
+        //   description: 'Message template',
+        //   messageType: 'text',
+        //   text: 'Template message...',
+        //   nextNodeId: ''
+        // }
       };
       return nodeConfigs[nodeType] || nodeConfigs.text;
     };

@@ -1,12 +1,12 @@
 export const componentItems = [
-  {
-    id: 'node',
-    type: 'node',
-    label: 'Node',
-    description: 'Container for multiple components',
-    icon: 'Box',
-    color: 'bg-slate-100 text-slate-600 border-slate-200'
-  },
+  // {
+  //   id: 'node',
+  //   type: 'node',
+  //   label: 'Node',
+  //   description: 'Container for multiple components',
+  //   icon: 'Box',
+  //   color: 'bg-slate-100 text-slate-600 border-slate-200'
+  // },
   {
     id: 'trigger',
     type: 'trigger',
@@ -63,20 +63,20 @@ export const componentItems = [
     icon: 'Square',
     color: 'bg-red-100 text-red-600 border-red-200'
   },
-  {
-    id: 'catalog',
-    type: 'catalog',
-    label: 'Catalog',
-    description: 'Send product catalog',
-    icon: 'Grid3X3',
-    color: 'bg-indigo-100 text-indigo-600 border-indigo-200'
-  },
-  {
-    id: 'template',
-    type: 'template',
-    label: 'Template',
-    description: 'Use an approved template',
-    icon: 'Layout',
-    color: 'bg-teal-100 text-teal-600 border-teal-200'
-  }
+  // {
+  //   id: 'catalog',
+  //   type: 'catalog',
+  //   label: 'Catalog',
+  //   description: 'Send product catalog',
+  //   icon: 'Grid3X3',
+  //   color: 'bg-indigo-100 text-indigo-600 border-indigo-200'
+  // },
+  // {
+  //   id: 'template',
+  //   type: 'template',
+  //   label: 'Template',
+  //   description: 'Use an approved template',
+  //   icon: 'Layout',
+  //   color: 'bg-teal-100 text-teal-600 border-teal-200'
+  // }
 ];

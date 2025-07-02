@@ -207,6 +207,7 @@ const BotManagement = ({ onCreateNew, onEditBot, onToggleSidebar }) => {
             onToggleActive={handleToggleActive}
             searchTerm={searchTerm}
             filterStatus={filterStatus}
+            refreshBots={loadFlows}
           />
         </div>
       </div>

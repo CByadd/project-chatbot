@@ -1,13 +1,14 @@
+// hooks/useBotPublishing.js
 import { useState, useCallback } from 'react';
 import { useFlowDatabase } from './useFlowDatabase';
 
-export const useBotPublishing = (currentBotId) => {
+export const useBotPublishing = (currentBotId, onRefresh) => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState(null);
 
   const { publishFlow, unpublishFlow } = useFlowDatabase();
 
-  const handleTogglePublish = useCallback(async (currentStatus) => {
+  const handleTogglePublish = useCallback(async (action) => {
     if (!currentBotId) {
       console.warn('⚠️ No bot ID provided');
       alert('Please save the flow first before publishing');
@@ -18,26 +19,30 @@ export const useBotPublishing = (currentBotId) => {
     setPublishError(null);
 
     try {
-      if (currentStatus === 'active') {
+      if (action === 'unpublish') {
         await unpublishFlow(currentBotId);
-        console.log('🚫 Unpublished bot:', currentBotId);
         alert('Bot unpublished successfully');
-      } else {
+      } else if (action === 'publish') {
         await publishFlow(currentBotId);
-        console.log('✅ Published bot:', currentBotId);
         alert('Bot published successfully');
       }
+
+      // ✅ Refresh flows after toggling publish state
+      if (typeof onRefresh === 'function') {
+        onRefresh();
+      }
+
     } catch (error) {
       console.error('❌ Toggle publish failed:', error);
       setPublishError(error.message);
     } finally {
       setIsPublishing(false);
     }
-  }, [currentBotId, publishFlow, unpublishFlow]);
+  }, [currentBotId, publishFlow, unpublishFlow, onRefresh]);
 
   return {
     isPublishing,
     publishError,
-    handleTogglePublish // ✅ ensure this is returned
+    handleTogglePublish
   };
 };
