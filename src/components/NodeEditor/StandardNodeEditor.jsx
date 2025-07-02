@@ -1,5 +1,7 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
+import FileUploadButton from '../FileUpload/FileUploadButton';
+import FilePreview from '../FileUpload/FilePreview';
 
 const StandardNodeEditor = ({ 
   nodeType, 
@@ -27,6 +29,40 @@ const StandardNodeEditor = ({
     setFormData(prev => ({
       ...prev,
       listItems: prev.listItems?.filter((_, index) => index !== itemIndex)
+    }));
+  };
+
+  // File upload handlers
+  const handleFileUploaded = (fileData, fieldName) => {
+    console.log('📁 File uploaded for field:', fieldName, fileData);
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: fileData.url,
+      [`${fieldName}FileName`]: fileData.fileName,
+      [`${fieldName}FileSize`]: fileData.fileSize,
+      [`${fieldName}FileType`]: fileData.fileType
+    }));
+  };
+
+  const handleFileRemoved = (fieldName) => {
+    console.log('🗑️ File removed for field:', fieldName);
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: '',
+      [`${fieldName}FileName`]: '',
+      [`${fieldName}FileSize`]: 0,
+      [`${fieldName}FileType`]: ''
+    }));
+  };
+
+  const handleUrlChange = (fieldName, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: value,
+      // Clear file metadata when URL is manually entered
+      [`${fieldName}FileName`]: '',
+      [`${fieldName}FileSize`]: 0,
+      [`${fieldName}FileType`]: ''
     }));
   };
 
@@ -111,15 +147,40 @@ const StandardNodeEditor = ({
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-sm"
                 />
               </div>
+              
+              {/* Image Upload Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
-                  placeholder="https://example.com/image.jpg"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Image</label>
+                
+                {formData.imageUrl ? (
+                  <FilePreview
+                    fileUrl={formData.imageUrl}
+                    fileName={formData.imageUrlFileName || 'Uploaded Image'}
+                    fileType={formData.imageUrlFileType || 'image/jpeg'}
+                    fileSize={formData.imageUrlFileSize || 0}
+                    onRemove={() => handleFileRemoved('imageUrl')}
+                  />
+                ) : (
+                  <FileUploadButton
+                    onFileUploaded={(fileData) => handleFileUploaded(fileData, 'imageUrl')}
+                    acceptedTypes="image/*"
+                    buttonText="Upload Image"
+                    buttonIcon="Image"
+                    maxSize={10 * 1024 * 1024} // 10MB for images
+                  />
+                )}
+                
+                {/* Manual URL Input */}
+                <div className="mt-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Or enter image URL manually:</label>
+                  <input
+                    type="url"
+                    value={formData.imageUrl || ''}
+                    onChange={(e) => handleUrlChange('imageUrl', e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  />
+                </div>
               </div>
             </>
           )}
@@ -136,15 +197,40 @@ const StandardNodeEditor = ({
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-sm"
                 />
               </div>
+              
+              {/* Video Upload Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Video URL</label>
-                <input
-                  type="url"
-                  value={formData.videoUrl || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
-                  placeholder="https://example.com/video.mp4"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Video</label>
+                
+                {formData.videoUrl ? (
+                  <FilePreview
+                    fileUrl={formData.videoUrl}
+                    fileName={formData.videoUrlFileName || 'Uploaded Video'}
+                    fileType={formData.videoUrlFileType || 'video/mp4'}
+                    fileSize={formData.videoUrlFileSize || 0}
+                    onRemove={() => handleFileRemoved('videoUrl')}
+                  />
+                ) : (
+                  <FileUploadButton
+                    onFileUploaded={(fileData) => handleFileUploaded(fileData, 'videoUrl')}
+                    acceptedTypes="video/*"
+                    buttonText="Upload Video"
+                    buttonIcon="Video"
+                    maxSize={50 * 1024 * 1024} // 50MB for videos
+                  />
+                )}
+                
+                {/* Manual URL Input */}
+                <div className="mt-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Or enter video URL manually:</label>
+                  <input
+                    type="url"
+                    value={formData.videoUrl || ''}
+                    onChange={(e) => handleUrlChange('videoUrl', e.target.value)}
+                    placeholder="https://example.com/video.mp4"
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm"
+                  />
+                </div>
               </div>
             </>
           )}
@@ -161,15 +247,40 @@ const StandardNodeEditor = ({
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-sm"
                 />
               </div>
+              
+              {/* Document Upload Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Document URL</label>
-                <input
-                  type="url"
-                  value={formData.documentUrl || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, documentUrl: e.target.value }))}
-                  placeholder="https://example.com/document.pdf"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Document</label>
+                
+                {formData.documentUrl ? (
+                  <FilePreview
+                    fileUrl={formData.documentUrl}
+                    fileName={formData.documentUrlFileName || 'Uploaded Document'}
+                    fileType={formData.documentUrlFileType || 'application/pdf'}
+                    fileSize={formData.documentUrlFileSize || 0}
+                    onRemove={() => handleFileRemoved('documentUrl')}
+                  />
+                ) : (
+                  <FileUploadButton
+                    onFileUploaded={(fileData) => handleFileUploaded(fileData, 'documentUrl')}
+                    acceptedTypes=".pdf,.doc,.docx,.txt"
+                    buttonText="Upload Document"
+                    buttonIcon="FileText"
+                    maxSize={25 * 1024 * 1024} // 25MB for documents
+                  />
+                )}
+                
+                {/* Manual URL Input */}
+                <div className="mt-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Or enter document URL manually:</label>
+                  <input
+                    type="url"
+                    value={formData.documentUrl || ''}
+                    onChange={(e) => handleUrlChange('documentUrl', e.target.value)}
+                    placeholder="https://example.com/document.pdf"
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                  />
+                </div>
               </div>
             </>
           )}
