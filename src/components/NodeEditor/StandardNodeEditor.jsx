@@ -32,7 +32,7 @@ const StandardNodeEditor = ({
     }));
   };
 
-  // File upload handlers
+  // File upload handlers using the new hook
   const handleFileUploaded = (fileData, fieldName) => {
     console.log('📁 File uploaded for field:', fieldName, fileData);
     setFormData(prev => ({
@@ -167,6 +167,7 @@ const StandardNodeEditor = ({
                     buttonText="Upload Image"
                     buttonIcon="Image"
                     maxSize={10 * 1024 * 1024} // 10MB for images
+                    fileCategory="image"
                   />
                 )}
                 
@@ -217,6 +218,7 @@ const StandardNodeEditor = ({
                     buttonText="Upload Video"
                     buttonIcon="Video"
                     maxSize={50 * 1024 * 1024} // 50MB for videos
+                    fileCategory="video"
                   />
                 )}
                 
@@ -267,6 +269,7 @@ const StandardNodeEditor = ({
                     buttonText="Upload Document"
                     buttonIcon="FileText"
                     maxSize={25 * 1024 * 1024} // 25MB for documents
+                    fileCategory="document"
                   />
                 )}
                 

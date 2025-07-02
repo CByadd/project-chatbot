@@ -1,6 +1,6 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
-import { s3UploadService } from '../../services/s3Upload';
+import { useFileUpload } from '../../hooks/useFileUpload';
 
 const FilePreview = ({ 
   fileUrl, 
@@ -8,12 +8,15 @@ const FilePreview = ({
   fileType, 
   fileSize,
   onRemove,
-  className = ""
+  className = "",
+  showActions = true
 }) => {
+  const { getFileCategory, formatFileSize } = useFileUpload();
+
   if (!fileUrl) return null;
 
-  const category = s3UploadService.getFileCategory(fileType);
-  const formattedSize = s3UploadService.formatFileSize(fileSize || 0);
+  const category = getFileCategory(fileType);
+  const formattedSize = formatFileSize(fileSize || 0);
 
   const renderPreview = () => {
     switch (category) {
@@ -35,10 +38,11 @@ const FilePreview = ({
                 <div className="text-xs text-gray-500">Failed to load image</div>
               </div>
             </div>
-            {onRemove && (
+            {showActions && onRemove && (
               <button
                 onClick={onRemove}
                 className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                title="Remove file"
               >
                 <Icons.X size={12} />
               </button>
@@ -70,10 +74,11 @@ const FilePreview = ({
                 <Icons.Play size={20} className="text-white ml-1" />
               </div>
             </div>
-            {onRemove && (
+            {showActions && onRemove && (
               <button
                 onClick={onRemove}
                 className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                title="Remove file"
               >
                 <Icons.X size={12} />
               </button>
@@ -91,10 +96,11 @@ const FilePreview = ({
               </div>
               <div className="text-xs text-gray-500 mt-1">{formattedSize}</div>
             </div>
-            {onRemove && (
+            {showActions && onRemove && (
               <button
                 onClick={onRemove}
                 className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                title="Remove file"
               >
                 <Icons.X size={12} />
               </button>
@@ -115,32 +121,34 @@ const FilePreview = ({
       <div className="flex items-center justify-between text-xs text-gray-500">
         <div className="flex items-center space-x-1">
           <Icons.Paperclip size={12} />
-          <span className="truncate max-w-[120px]">{fileName}</span>
+          <span className="truncate max-w-[120px]" title={fileName}>{fileName}</span>
         </div>
         <span>{formattedSize}</span>
       </div>
       
-      {/* View/Download Link */}
-      <div className="flex space-x-2">
-        <a
-          href={fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex-1 px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs hover:bg-blue-100 transition-colors flex items-center justify-center"
-        >
-          <Icons.ExternalLink size={12} className="mr-1" />
-          View
-        </a>
-        {onRemove && (
-          <button
-            onClick={onRemove}
-            className="px-2 py-1 bg-red-50 text-red-600 rounded text-xs hover:bg-red-100 transition-colors flex items-center"
+      {/* Actions */}
+      {showActions && (
+        <div className="flex space-x-2">
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs hover:bg-blue-100 transition-colors flex items-center justify-center"
           >
-            <Icons.Trash2 size={12} className="mr-1" />
-            Remove
-          </button>
-        )}
-      </div>
+            <Icons.ExternalLink size={12} className="mr-1" />
+            View
+          </a>
+          {onRemove && (
+            <button
+              onClick={onRemove}
+              className="px-2 py-1 bg-red-50 text-red-600 rounded text-xs hover:bg-red-100 transition-colors flex items-center"
+            >
+              <Icons.Trash2 size={12} className="mr-1" />
+              Remove
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
