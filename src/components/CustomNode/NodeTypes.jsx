@@ -338,6 +338,83 @@ export const StandardNode = ({
     );
   };
 
+  // Render file preview for media nodes
+  const renderMediaPreview = () => {
+    if (data.type === 'image' && data.imageUrl) {
+      return (
+        <div className="mt-2">
+          <div className="relative w-full h-20 bg-gray-100 rounded border overflow-hidden">
+            <img 
+              src={data.imageUrl} 
+              alt="Preview"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div className="hidden w-full h-full items-center justify-center">
+              <Icons.ImageOff size={16} className="text-gray-400" />
+            </div>
+          </div>
+          {data.imageUrlFileName && (
+            <div className="text-xs text-gray-500 mt-1 truncate">
+              📎 {data.imageUrlFileName}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (data.type === 'video' && data.videoUrl) {
+      return (
+        <div className="mt-2">
+          <div className="relative w-full h-20 bg-gray-100 rounded border overflow-hidden">
+            <video 
+              src={data.videoUrl}
+              className="w-full h-full object-cover"
+              muted
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div className="hidden w-full h-full items-center justify-center">
+              <Icons.VideoOff size={16} className="text-gray-400" />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-8 h-8 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                <Icons.Play size={12} className="text-white ml-0.5" />
+              </div>
+            </div>
+          </div>
+          {data.videoUrlFileName && (
+            <div className="text-xs text-gray-500 mt-1 truncate">
+              📎 {data.videoUrlFileName}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (data.type === 'document' && data.documentUrl) {
+      return (
+        <div className="mt-2">
+          <div className="w-full h-16 bg-gray-100 rounded border flex items-center justify-center p-2">
+            <div className="flex items-center space-x-2">
+              <Icons.FileText size={16} className="text-gray-400" />
+              <div className="text-xs text-gray-600 truncate">
+                {data.documentUrlFileName || 'Document'}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div 
       className={`px-4 sm:px-5 py-3 sm:py-4 shadow-lg rounded-xl border-2 bg-white min-w-[250px] sm:min-w-[300px] max-w-[340px] cursor-pointer transition-all duration-200 relative group ${config.color} ${selected ? 'ring-2 ring-blue-500 shadow-xl' : 'hover:shadow-xl'}`}
@@ -422,26 +499,8 @@ export const StandardNode = ({
             </div>
           )}
           
-          {data.imageUrl && (
-            <div className="text-xs">
-              <span className="font-medium text-purple-700">Image:</span>
-              <span className="ml-1 text-gray-600">📷 Attached</span>
-            </div>
-          )}
-          
-          {data.videoUrl && (
-            <div className="text-xs">
-              <span className="font-medium text-pink-700">Video:</span>
-              <span className="ml-1 text-gray-600">🎥 Attached</span>
-            </div>
-          )}
-          
-          {data.documentUrl && (
-            <div className="text-xs">
-              <span className="font-medium text-orange-700">Document:</span>
-              <span className="ml-1 text-gray-600">📄 Attached</span>
-            </div>
-          )}
+          {/* Media preview */}
+          {renderMediaPreview()}
           
           {data.listButtons && data.listButtons.length > 0 && (
             <div className="text-xs">
