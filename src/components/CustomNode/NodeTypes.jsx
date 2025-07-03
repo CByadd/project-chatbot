@@ -8,6 +8,83 @@ export const ButtonNode = ({
 }) => {
   const buttons = data.buttons || [];
   
+  // Render header media preview
+  const renderHeaderMedia = () => {
+    if (data.headerType === 'image' && data.headerImageUrl) {
+      return (
+        <div className="mb-3">
+          <div className="relative w-full h-16 bg-gray-100 rounded border overflow-hidden">
+            <img 
+              src={data.headerImageUrl} 
+              alt="Header"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div className="hidden w-full h-full items-center justify-center">
+              <Icons.ImageOff size={16} className="text-gray-400" />
+            </div>
+          </div>
+          {data.headerImageUrlFileName && (
+            <div className="text-xs text-gray-500 mt-1 truncate">
+              📎 {data.headerImageUrlFileName}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (data.headerType === 'video' && data.headerVideoUrl) {
+      return (
+        <div className="mb-3">
+          <div className="relative w-full h-16 bg-gray-100 rounded border overflow-hidden">
+            <video 
+              src={data.headerVideoUrl}
+              className="w-full h-full object-cover"
+              muted
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div className="hidden w-full h-full items-center justify-center">
+              <Icons.VideoOff size={16} className="text-gray-400" />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-6 h-6 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                <Icons.Play size={10} className="text-white ml-0.5" />
+              </div>
+            </div>
+          </div>
+          {data.headerVideoUrlFileName && (
+            <div className="text-xs text-gray-500 mt-1 truncate">
+              📎 {data.headerVideoUrlFileName}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (data.headerType === 'document' && data.headerDocumentUrl) {
+      return (
+        <div className="mb-3">
+          <div className="w-full h-12 bg-gray-100 rounded border flex items-center justify-center p-2">
+            <div className="flex items-center space-x-2">
+              <Icons.FileText size={14} className="text-gray-400" />
+              <div className="text-xs text-gray-600 truncate">
+                {data.headerDocumentUrlFileName || 'Document'}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+  
   return (
     <div className="bg-white border-2 border-gray-200 rounded-xl shadow-lg min-w-[250px] sm:min-w-[280px] max-w-[320px] relative group">
       {/* Delete button */}
@@ -37,6 +114,17 @@ export const ButtonNode = ({
 
       {/* Content */}
       <div className="p-3 sm:p-4">
+        {/* Header Media Preview */}
+        {renderHeaderMedia()}
+
+        {/* Header Text */}
+        {data.header && (
+          <div className="text-xs sm:text-sm font-medium text-gray-800 mb-2">
+            {data.header}
+          </div>
+        )}
+
+        {/* Body Text */}
         <div className="text-xs sm:text-sm text-gray-600 mb-3">
           {data.text || 'Offer quick responses'}
         </div>
@@ -77,6 +165,13 @@ export const ButtonNode = ({
             </>
           )}
         </div>
+
+        {/* Footer */}
+        {data.footer && (
+          <div className="text-xs text-gray-500 mt-3 text-center">
+            {data.footer}
+          </div>
+        )}
 
         {/* Add button */}
         <div className="flex justify-end mt-3">
@@ -286,7 +381,8 @@ export const StandardNode = ({
   data, 
   selected, 
   onEdit, 
-  onDelete 
+  onDelete,
+  onAddButtons
 }) => {
   const getNodeConfig = (type) => {
     const configs = {
@@ -415,6 +511,9 @@ export const StandardNode = ({
     return null;
   };
 
+  // Check if node has buttons
+  const hasButtons = data.buttons && data.buttons.length > 0;
+
   return (
     <div 
       className={`px-4 sm:px-5 py-3 sm:py-4 shadow-lg rounded-xl border-2 bg-white min-w-[250px] sm:min-w-[300px] max-w-[340px] cursor-pointer transition-all duration-200 relative group ${config.color} ${selected ? 'ring-2 ring-blue-500 shadow-xl' : 'hover:shadow-xl'}`}
@@ -434,12 +533,30 @@ export const StandardNode = ({
           {Icon && <Icon size={18} className="flex-shrink-0 sm:w-5 sm:h-5" />}
           <div className="font-semibold text-sm sm:text-base truncate">{data.label}</div>
         </div>
-        <button
-          onClick={onEdit}
-          className="p-1.5 sm:p-2 hover:bg-white hover:bg-opacity-60 rounded-lg transition-colors flex-shrink-0"
-        >
-          <Icons.Edit2 size={14} className="sm:w-4 sm:h-4" />
-        </button>
+        <div className="flex items-center space-x-1">
+          {/* Add Buttons Icon - Show for all non-button nodes */}
+          {data.type !== 'button' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onAddButtons) {
+                  onAddButtons(id, data);
+                }
+              }}
+              className="p-1.5 sm:p-2 hover:bg-white hover:bg-opacity-60 rounded-lg transition-colors flex-shrink-0"
+              title="Add buttons to this message"
+            >
+              <Icons.Square size={14} className="sm:w-4 sm:h-4 text-green-600" />
+            </button>
+          )}
+          
+          <button
+            onClick={onEdit}
+            className="p-1.5 sm:p-2 hover:bg-white hover:bg-opacity-60 rounded-lg transition-colors flex-shrink-0"
+          >
+            <Icons.Edit2 size={14} className="sm:w-4 sm:h-4" />
+          </button>
+        </div>
       </div>
       
       {/* Node-specific content */}
@@ -506,6 +623,15 @@ export const StandardNode = ({
             <div className="text-xs">
               <span className="font-medium text-yellow-700">List Items:</span>
               <span className="ml-1 text-gray-600">{data.listButtons.length} items</span>
+            </div>
+          )}
+
+          {/* Show buttons indicator */}
+          {hasButtons && (
+            <div className="text-xs bg-green-50 p-2 rounded border border-green-200">
+              <Icons.Square size={12} className="inline mr-1 text-green-600" />
+              <span className="font-medium text-green-700">Has buttons:</span>
+              <span className="ml-1 text-gray-600">{data.buttons.length} button{data.buttons.length !== 1 ? 's' : ''}</span>
             </div>
           )}
 

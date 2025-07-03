@@ -1,5 +1,7 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
+import FileUploadButton from '../FileUpload/FileUploadButton';
+import FilePreview from '../FileUpload/FilePreview';
 
 const ButtonEditor = ({ 
   formData, 
@@ -36,17 +38,55 @@ const ButtonEditor = ({
     }));
   };
 
+  // Media upload handlers
+  const handleMediaUploaded = (fileData, fieldName) => {
+    console.log('📁 Media uploaded for button message:', fieldName, fileData);
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: fileData.url,
+      [`${fieldName}FileName`]: fileData.fileName,
+      [`${fieldName}FileSize`]: fileData.fileSize,
+      [`${fieldName}FileType`]: fileData.fileType
+    }));
+  };
+
+  const handleMediaRemoved = (fieldName) => {
+    console.log('🗑️ Media removed for button message:', fieldName);
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: '',
+      [`${fieldName}FileName`]: '',
+      [`${fieldName}FileSize`]: 0,
+      [`${fieldName}FileType`]: ''
+    }));
+  };
+
+  const handleUrlChange = (fieldName, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: value,
+      // Clear file metadata when URL is manually entered
+      [`${fieldName}FileName`]: '',
+      [`${fieldName}FileSize`]: 0,
+      [`${fieldName}FileType`]: ''
+    }));
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Reply Buttons</h3>
-        <p className="text-gray-600 text-sm">Configure your interactive button responses</p>
+        <p className="text-gray-600 text-sm">Configure your interactive button responses with optional media</p>
       </div>
 
       {/* Header Type Dropdown */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Header Type</label>
-        <select className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+        <select 
+          value={formData.headerType || 'text'}
+          onChange={(e) => setFormData(prev => ({ ...prev, headerType: e.target.value }))}
+          className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+        >
           <option value="text">Text</option>
           <option value="image">Image</option>
           <option value="video">Video</option>
@@ -54,9 +94,118 @@ const ButtonEditor = ({
         </select>
       </div>
 
-      {/* Header */}
+      {/* Header Media Upload Section */}
+      {formData.headerType === 'image' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Header Image</label>
+          
+          {formData.headerImageUrl ? (
+            <FilePreview
+              fileUrl={formData.headerImageUrl}
+              fileName={formData.headerImageUrlFileName || 'Header Image'}
+              fileType={formData.headerImageUrlFileType || 'image/jpeg'}
+              fileSize={formData.headerImageUrlFileSize || 0}
+              onRemove={() => handleMediaRemoved('headerImageUrl')}
+            />
+          ) : (
+            <FileUploadButton
+              onFileUploaded={(fileData) => handleMediaUploaded(fileData, 'headerImageUrl')}
+              acceptedTypes="image/*"
+              buttonText="Upload Header Image"
+              buttonIcon="Image"
+              maxSize={10 * 1024 * 1024} // 10MB
+              fileCategory="image"
+            />
+          )}
+          
+          <div className="mt-3">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Or enter image URL manually:</label>
+            <input
+              type="url"
+              value={formData.headerImageUrl || ''}
+              onChange={(e) => handleUrlChange('headerImageUrl', e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            />
+          </div>
+        </div>
+      )}
+
+      {formData.headerType === 'video' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Header Video</label>
+          
+          {formData.headerVideoUrl ? (
+            <FilePreview
+              fileUrl={formData.headerVideoUrl}
+              fileName={formData.headerVideoUrlFileName || 'Header Video'}
+              fileType={formData.headerVideoUrlFileType || 'video/mp4'}
+              fileSize={formData.headerVideoUrlFileSize || 0}
+              onRemove={() => handleMediaRemoved('headerVideoUrl')}
+            />
+          ) : (
+            <FileUploadButton
+              onFileUploaded={(fileData) => handleMediaUploaded(fileData, 'headerVideoUrl')}
+              acceptedTypes="video/*"
+              buttonText="Upload Header Video"
+              buttonIcon="Video"
+              maxSize={50 * 1024 * 1024} // 50MB
+              fileCategory="video"
+            />
+          )}
+          
+          <div className="mt-3">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Or enter video URL manually:</label>
+            <input
+              type="url"
+              value={formData.headerVideoUrl || ''}
+              onChange={(e) => handleUrlChange('headerVideoUrl', e.target.value)}
+              placeholder="https://example.com/video.mp4"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            />
+          </div>
+        </div>
+      )}
+
+      {formData.headerType === 'document' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Header Document</label>
+          
+          {formData.headerDocumentUrl ? (
+            <FilePreview
+              fileUrl={formData.headerDocumentUrl}
+              fileName={formData.headerDocumentUrlFileName || 'Header Document'}
+              fileType={formData.headerDocumentUrlFileType || 'application/pdf'}
+              fileSize={formData.headerDocumentUrlFileSize || 0}
+              onRemove={() => handleMediaRemoved('headerDocumentUrl')}
+            />
+          ) : (
+            <FileUploadButton
+              onFileUploaded={(fileData) => handleMediaUploaded(fileData, 'headerDocumentUrl')}
+              acceptedTypes=".pdf,.doc,.docx,.txt"
+              buttonText="Upload Header Document"
+              buttonIcon="FileText"
+              maxSize={25 * 1024 * 1024} // 25MB
+              fileCategory="document"
+            />
+          )}
+          
+          <div className="mt-3">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Or enter document URL manually:</label>
+            <input
+              type="url"
+              value={formData.headerDocumentUrl || ''}
+              onChange={(e) => handleUrlChange('headerDocumentUrl', e.target.value)}
+              placeholder="https://example.com/document.pdf"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Header Text */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Header</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Header Text</label>
         <input
           type="text"
           value={formData.header || ''}
@@ -140,6 +289,21 @@ const ButtonEditor = ({
               Add Button
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Footer (optional)</label>
+        <input
+          type="text"
+          value={formData.footer || ''}
+          onChange={(e) => setFormData(prev => ({ ...prev, footer: e.target.value }))}
+          placeholder="Enter footer text"
+          className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+        />
+        <div className="text-right text-xs text-gray-400 mt-1">
+          {(formData.footer || '').length}/60
         </div>
       </div>
     </div>

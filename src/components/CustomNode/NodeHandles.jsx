@@ -130,11 +130,19 @@ export const ListNodeHandles = ({ listButtons }) => {
   );
 };
 
-export const StandardNodeHandles = () => {
+export const StandardNodeHandles = ({ hasButtons }) => {
   return (
     <>
       <Handle type="target" position={Position.Left} className="w-3 h-3 bg-gray-400" />
-      <Handle type="source" position={Position.Right} className="w-3 h-3 bg-gray-400" />
+      
+      {/* Show button handles if node has buttons */}
+      {hasButtons ? (
+        // Dynamic button handles will be added by the button system
+        <Handle type="source" position={Position.Right} className="w-3 h-3 bg-purple-400" />
+      ) : (
+        // Standard single output handle
+        <Handle type="source" position={Position.Right} className="w-3 h-3 bg-gray-400" />
+      )}
     </>
   );
 };

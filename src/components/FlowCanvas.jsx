@@ -84,6 +84,40 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
     }
   }, [flowData, setNodes, setEdges]);
 
+  // Handle adding buttons to any node
+  const handleAddButtons = useCallback((nodeId, nodeData) => {
+    console.log('🔘 Adding buttons to node:', { nodeId, nodeType: nodeData.type });
+    
+    setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.id === nodeId) {
+          // Add buttons array if it doesn't exist
+          const updatedData = {
+            ...node.data,
+            buttons: node.data.buttons || [
+              { label: 'Option 1', description: '', imageUrl: '', nextNodeId: '' },
+              { label: 'Option 2', description: '', imageUrl: '', nextNodeId: '' }
+            ]
+          };
+          
+          return {
+            ...node,
+            data: updatedData
+          };
+        }
+        return node;
+      })
+    );
+    
+    // Open the node editor to configure the buttons
+    setTimeout(() => {
+      const updatedNode = nodes.find(n => n.id === nodeId);
+      if (updatedNode && onNodeEdit) {
+        onNodeEdit(nodeId, { ...updatedNode.data, buttons: updatedNode.data.buttons || [] });
+      }
+    }, 100);
+  }, [nodes, onNodeEdit, setNodes]);
+
   // Stable node types definition
   const nodeTypes = useMemo(() => ({ 
     custom: (props) => (
@@ -91,9 +125,10 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
         {...props} 
         onEdit={onNodeEdit} 
         onDelete={handleNodeDelete}
+        onAddButtons={handleAddButtons}
       />
     )
-  }), [onNodeEdit]);
+  }), [onNodeEdit, handleAddButtons]);
 
   // Debounced flow data update to parent
   const notifyFlowDataChange = useCallback((newNodes, newEdges) => {
@@ -158,7 +193,7 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
         }
       }
 
-      // Handle button connections
+      // Handle button connections (for any node type that has buttons)
       if (node.data.buttons) {
         node.data.buttons.forEach((button, index) => {
           if (button.nextNodeId) {
@@ -220,8 +255,8 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
         });
       }
 
-      // Handle standard nextNodeId for other node types
-      if (node.data.type !== 'trigger' && node.data.type !== 'button' && node.data.type !== 'catalog' && node.data.type !== 'list' && node.data.nextNodeId) {
+      // Handle standard nextNodeId for other node types (but not if they have buttons)
+      if (node.data.type !== 'trigger' && node.data.type !== 'button' && node.data.type !== 'catalog' && node.data.type !== 'list' && node.data.nextNodeId && !node.data.buttons) {
         const targetNode = nodes.find(n => n.id === node.data.nextNodeId);
         if (targetNode) {
           newEdges.push({
@@ -272,7 +307,7 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
   const onConnect = useCallback((params) => {
     console.log('🔗 Connection attempt:', params);
 
-    // Handle button-specific connections
+    // Handle button-specific connections (for any node type with buttons)
     if (params.sourceHandle && params.sourceHandle.startsWith('button-')) {
       const buttonIndex = parseInt(params.sourceHandle.split('-')[1]);
       

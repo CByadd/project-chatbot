@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { ButtonNode, CatalogNode, StandardNode, ListNode } from './NodeTypes';
 import { ButtonNodeHandles, CatalogNodeHandles, StandardNodeHandles, ListNodeHandles } from './NodeHandles';
 
-const CustomNode = memo(({ id, data, selected, onEdit, onDelete }) => {
+const CustomNode = memo(({ id, data, selected, onEdit, onDelete, onAddButtons }) => {
   const handleDoubleClick = (e) => {
     e.stopPropagation();
     if (onEdit) {
@@ -21,6 +21,12 @@ const CustomNode = memo(({ id, data, selected, onEdit, onDelete }) => {
     e.stopPropagation();
     if (onDelete) {
       onDelete(id);
+    }
+  };
+
+  const handleAddButtonsClick = (nodeId, nodeData) => {
+    if (onAddButtons) {
+      onAddButtons(nodeId, nodeData);
     }
   };
 
@@ -77,7 +83,8 @@ const CustomNode = memo(({ id, data, selected, onEdit, onDelete }) => {
         data={data} 
         selected={selected}
         onEdit={handleEditClick} 
-        onDelete={handleDeleteClick} 
+        onDelete={handleDeleteClick}
+        onAddButtons={handleAddButtonsClick}
       />
       <StandardNodeHandles />
     </div>
