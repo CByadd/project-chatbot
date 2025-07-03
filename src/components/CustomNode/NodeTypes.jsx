@@ -381,8 +381,7 @@ export const StandardNode = ({
   data, 
   selected, 
   onEdit, 
-  onDelete,
-  onAddButtons
+  onDelete
 }) => {
   const getNodeConfig = (type) => {
     const configs = {
@@ -511,9 +510,6 @@ export const StandardNode = ({
     return null;
   };
 
-  // Check if node has buttons
-  const hasButtons = data.buttons && data.buttons.length > 0;
-
   return (
     <div 
       className={`px-4 sm:px-5 py-3 sm:py-4 shadow-lg rounded-xl border-2 bg-white min-w-[250px] sm:min-w-[300px] max-w-[340px] cursor-pointer transition-all duration-200 relative group ${config.color} ${selected ? 'ring-2 ring-blue-500 shadow-xl' : 'hover:shadow-xl'}`}
@@ -534,22 +530,6 @@ export const StandardNode = ({
           <div className="font-semibold text-sm sm:text-base truncate">{data.label}</div>
         </div>
         <div className="flex items-center space-x-1">
-          {/* Add Buttons Icon - Show for all non-button nodes */}
-          {data.type !== 'button' && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onAddButtons) {
-                  onAddButtons(id, data);
-                }
-              }}
-              className="p-1.5 sm:p-2 hover:bg-white hover:bg-opacity-60 rounded-lg transition-colors flex-shrink-0"
-              title="Add buttons to this message"
-            >
-              <Icons.Square size={14} className="sm:w-4 sm:h-4 text-green-600" />
-            </button>
-          )}
-          
           <button
             onClick={onEdit}
             className="p-1.5 sm:p-2 hover:bg-white hover:bg-opacity-60 rounded-lg transition-colors flex-shrink-0"
@@ -623,15 +603,6 @@ export const StandardNode = ({
             <div className="text-xs">
               <span className="font-medium text-yellow-700">List Items:</span>
               <span className="ml-1 text-gray-600">{data.listButtons.length} items</span>
-            </div>
-          )}
-
-          {/* Show buttons indicator */}
-          {hasButtons && (
-            <div className="text-xs bg-green-50 p-2 rounded border border-green-200">
-              <Icons.Square size={12} className="inline mr-1 text-green-600" />
-              <span className="font-medium text-green-700">Has buttons:</span>
-              <span className="ml-1 text-gray-600">{data.buttons.length} button{data.buttons.length !== 1 ? 's' : ''}</span>
             </div>
           )}
 

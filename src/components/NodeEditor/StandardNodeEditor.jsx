@@ -32,37 +32,6 @@ const StandardNodeEditor = ({
     }));
   };
 
-  // Button management functions
-  const addButton = () => {
-    const newButton = {
-      label: '',
-      description: '',
-      imageUrl: '',
-      nextNodeId: ''
-    };
-    
-    setFormData(prev => ({
-      ...prev,
-      buttons: [...(prev.buttons || []), newButton]
-    }));
-  };
-
-  const updateButton = (buttonIndex, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      buttons: prev.buttons?.map((button, index) =>
-        index === buttonIndex ? { ...button, [field]: value } : button
-      )
-    }));
-  };
-
-  const removeButton = (buttonIndex) => {
-    setFormData(prev => ({
-      ...prev,
-      buttons: prev.buttons?.filter((_, index) => index !== buttonIndex)
-    }));
-  };
-
   // File upload handlers using the new hook
   const handleFileUploaded = (fileData, fieldName) => {
     console.log('📁 File uploaded for field:', fieldName, fileData);
@@ -363,118 +332,34 @@ const StandardNodeEditor = ({
             </>
           )}
 
-          {/* Universal Buttons Section - Available for all node types */}
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <label className="block text-sm font-medium text-purple-800">
-                <Icons.Square size={16} className="inline mr-2" />
-                Interactive Buttons (Optional)
-              </label>
-              {(!formData.buttons || formData.buttons.length === 0) && (
+          {/* Auto-flow Connection for all node types */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <label className="block text-sm font-medium text-blue-800 mb-2">
+              <Icons.ArrowRight size={16} className="inline mr-2" />
+              Auto-flow to Next Node
+            </label>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => onOpenNodeSelector(null, 'next')}
+                className="flex-1 px-3 py-2 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm flex items-center justify-center"
+              >
+                <Icons.ArrowRight size={14} className="mr-2" />
+                {formData.nextNodeId ? `Flows to: ${formData.nextNodeId}` : 'Set Next Node'}
+              </button>
+              {formData.nextNodeId && (
                 <button
-                  onClick={addButton}
-                  className="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs"
+                  onClick={() => setFormData(prev => ({ ...prev, nextNodeId: '' }))}
+                  className="px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm"
                 >
-                  <Icons.Plus size={12} className="mr-1" />
-                  Add Buttons
+                  <Icons.Unlink size={14} />
                 </button>
               )}
             </div>
-
-            {formData.buttons && formData.buttons.length > 0 ? (
-              <div className="space-y-3">
-                {formData.buttons.map((button, buttonIndex) => (
-                  <div key={buttonIndex} className="space-y-2 bg-white p-3 rounded-lg border border-purple-200">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={button.label || ''}
-                        onChange={(e) => updateButton(buttonIndex, 'label', e.target.value)}
-                        placeholder="Button text"
-                        className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                      />
-                      <div className="text-xs text-gray-400 min-w-[40px] text-center">
-                        {(button.label || '').length}/20
-                      </div>
-                      <button
-                        onClick={() => removeButton(buttonIndex)}
-                        className="text-red-500 hover:text-red-700 p-2 hover:bg-red-100 rounded-lg transition-colors flex-shrink-0"
-                      >
-                        <Icons.X size={16} />
-                      </button>
-                    </div>
-                    
-                    {/* Connect to Node Button */}
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => onOpenNodeSelector(buttonIndex, 'button')}
-                        className="flex-1 px-3 py-2 bg-purple-50 border border-purple-200 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors text-sm flex items-center justify-center"
-                      >
-                        <Icons.Link size={14} className="mr-2" />
-                        {button.nextNodeId ? `Connected to: ${button.nextNodeId}` : 'Connect to Node'}
-                      </button>
-                      {button.nextNodeId && (
-                        <button
-                          onClick={() => updateButton(buttonIndex, 'nextNodeId', '')}
-                          className="px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm"
-                        >
-                          <Icons.Unlink size={14} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Add More Buttons */}
-                {formData.buttons.length < 3 && (
-                  <button
-                    onClick={addButton}
-                    className="w-full py-2 border-2 border-dashed border-purple-300 rounded-lg text-purple-600 hover:border-purple-400 hover:bg-purple-50 transition-colors flex items-center justify-center font-medium text-sm"
-                  >
-                    <Icons.Plus size={16} className="mr-2" />
-                    Add Another Button
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-4 text-purple-600 text-sm">
-                <Icons.Square size={24} className="mx-auto mb-2 text-purple-400" />
-                <p>Add interactive buttons to this message</p>
-                <p className="text-xs text-purple-500 mt-1">Users can click buttons to navigate to different parts of your flow</p>
-              </div>
-            )}
+            <p className="text-xs text-blue-600 mt-2">
+              <Icons.Info size={12} className="inline mr-1" />
+              Automatically continue to the next node after sending this message
+            </p>
           </div>
-
-          {/* Auto-flow Connection for non-interactive nodes (only if no buttons) */}
-          {(!formData.buttons || formData.buttons.length === 0) && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <label className="block text-sm font-medium text-blue-800 mb-2">
-                <Icons.ArrowRight size={16} className="inline mr-2" />
-                Auto-flow to Next Node
-              </label>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => onOpenNodeSelector(null, 'next')}
-                  className="flex-1 px-3 py-2 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm flex items-center justify-center"
-                >
-                  <Icons.ArrowRight size={14} className="mr-2" />
-                  {formData.nextNodeId ? `Flows to: ${formData.nextNodeId}` : 'Set Next Node'}
-                </button>
-                {formData.nextNodeId && (
-                  <button
-                    onClick={() => setFormData(prev => ({ ...prev, nextNodeId: '' }))}
-                    className="px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm"
-                  >
-                    <Icons.Unlink size={14} />
-                  </button>
-                )}
-              </div>
-              <p className="text-xs text-blue-600 mt-2">
-                <Icons.Info size={12} className="inline mr-1" />
-                Automatically continue to the next node after sending this message
-              </p>
-            </div>
-          )}
         </div>
       )}
     </div>

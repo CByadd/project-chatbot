@@ -84,40 +84,6 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
     }
   }, [flowData, setNodes, setEdges]);
 
-  // Handle adding buttons to any node
-  const handleAddButtons = useCallback((nodeId, nodeData) => {
-    console.log('🔘 Adding buttons to node:', { nodeId, nodeType: nodeData.type });
-    
-    setNodes((nodes) =>
-      nodes.map((node) => {
-        if (node.id === nodeId) {
-          // Add buttons array if it doesn't exist
-          const updatedData = {
-            ...node.data,
-            buttons: node.data.buttons || [
-              { label: 'Option 1', description: '', imageUrl: '', nextNodeId: '' },
-              { label: 'Option 2', description: '', imageUrl: '', nextNodeId: '' }
-            ]
-          };
-          
-          return {
-            ...node,
-            data: updatedData
-          };
-        }
-        return node;
-      })
-    );
-    
-    // Open the node editor to configure the buttons
-    setTimeout(() => {
-      const updatedNode = nodes.find(n => n.id === nodeId);
-      if (updatedNode && onNodeEdit) {
-        onNodeEdit(nodeId, { ...updatedNode.data, buttons: updatedNode.data.buttons || [] });
-      }
-    }, 100);
-  }, [nodes, onNodeEdit, setNodes]);
-
   // Stable node types definition
   const nodeTypes = useMemo(() => ({ 
     custom: (props) => (
@@ -125,10 +91,9 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
         {...props} 
         onEdit={onNodeEdit} 
         onDelete={handleNodeDelete}
-        onAddButtons={handleAddButtons}
       />
     )
-  }), [onNodeEdit, handleAddButtons]);
+  }), [onNodeEdit]);
 
   // Debounced flow data update to parent
   const notifyFlowDataChange = useCallback((newNodes, newEdges) => {
@@ -508,11 +473,6 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
 
     const getNodeData = (nodeType) => {
       const nodeConfigs = {
-        // node: {
-        //   label: 'Node Container',
-        //   description: 'Multi-component container',
-        //   components: []
-        // },
         trigger: { 
           label: 'Trigger', 
           description: 'Trigger keywords only',
@@ -569,25 +529,7 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
             { label: 'Option 1', description: '', imageUrl: '', nextNodeId: '' },
             { label: 'Option 2', description: '', imageUrl: '', nextNodeId: '' }
           ]
-        },
-        // catalog: { 
-        //   label: 'Catalog', 
-        //   description: 'Product catalog',
-        //   messageType: 'catalog',
-        //   text: 'Browse our catalog:',
-        //   catalog: { 
-        //     title: 'Product Catalog', 
-        //     items: ['Product 1', 'Product 2', 'Product 3'],
-        //     connections: {}
-        //   }
-        // },
-        // template: { 
-        //   label: 'Template', 
-        //   description: 'Message template',
-        //   messageType: 'text',
-        //   text: 'Template message...',
-        //   nextNodeId: ''
-        // }
+        }
       };
       return nodeConfigs[nodeType] || nodeConfigs.text;
     };
