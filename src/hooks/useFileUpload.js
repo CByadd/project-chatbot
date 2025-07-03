@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-
+import {BASE_URL} from './../services/api';
 /**
  * Custom hook for handling file uploads with S3 integration
  * Provides upload state management, progress tracking, and error handling
@@ -87,9 +87,9 @@ export const useFileUpload = () => {
       console.log('🔗 Requesting signed URL:', { fileName, fileType, fileSize });
       
       // TODO: Replace with your actual API endpoint
-      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || 'https://proto-server.onrender.com/api';
+      const apiUrl = BASE_URL;
       
-      const response = await fetch(`${apiUrl}/upload/signed-url`, {
+      const response = await fetch(`${apiUrl}/upload/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,87 +179,73 @@ export const useFileUpload = () => {
    * Main upload function
    */
   const uploadFile = useCallback(async (file, options = {}) => {
-    const {
-      fileType = 'image',
-      onProgress,
-      uploadId = Date.now().toString()
-    } = options;
+  const {
+    fileType = 'image',
+    onProgress,
+    uploadId = Date.now().toString()
+  } = options;
 
-    // Create abort controller for this upload
-    abortControllerRef.current = new AbortController();
+  abortControllerRef.current = new AbortController();
 
-    // Reset state
+  setUploadState(prev => ({
+    ...prev,
+    isUploading: true,
+    progress: 0,
+    error: null
+  }));
+
+  try {
+    validateFile(file, fileType);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${BASE_URL}/upload`, {
+      method: 'POST',
+      body: formData,
+      signal: abortControllerRef.current.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed with status: ${response.status}`);
+    }
+
+    const { fileUrl } = await response.json();
+
+    const result = {
+      id: uploadId,
+      url: fileUrl,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      category: fileType,
+      uploadedAt: new Date().toISOString()
+    };
+
     setUploadState(prev => ({
       ...prev,
-      isUploading: true,
-      progress: 0,
-      error: null
+      isUploading: false,
+      progress: 100,
+      uploadedFiles: new Map(prev.uploadedFiles.set(uploadId, result))
     }));
 
-    try {
-      // Validate file
-      validateFile(file, fileType);
+    return result;
 
-      // Generate unique filename
-      const uniqueFileName = generateUniqueFileName(file.name);
+  } catch (error) {
+    console.error('❌ Upload process failed:', error);
 
-      // Get signed URL from server
-      const { signedUrl, fileUrl } = await getSignedUrl(
-        uniqueFileName,
-        file.type,
-        file.size
-      );
+    setUploadState(prev => ({
+      ...prev,
+      isUploading: false,
+      progress: 0,
+      error: error.message
+    }));
 
-      // Upload to S3 with progress tracking
-      await uploadToS3(signedUrl, file, (progress) => {
-        setUploadState(prev => ({
-          ...prev,
-          progress
-        }));
-        
-        // Call external progress callback
-        if (onProgress) {
-          onProgress(progress);
-        }
-      });
-
-      // Prepare result
-      const result = {
-        id: uploadId,
-        url: fileUrl,
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        category: fileType,
-        uploadedAt: new Date().toISOString()
-      };
-
-      // Update state with successful upload
-      setUploadState(prev => ({
-        ...prev,
-        isUploading: false,
-        progress: 100,
-        uploadedFiles: new Map(prev.uploadedFiles.set(uploadId, result))
-      }));
-
-      console.log('🎉 File upload completed:', result);
-      return result;
-
-    } catch (error) {
-      console.error('❌ Upload process failed:', error);
-      
-      setUploadState(prev => ({
-        ...prev,
-        isUploading: false,
-        progress: 0,
-        error: error.message
-      }));
-
-      throw error;
-    } finally {
-      abortControllerRef.current = null;
-    }
-  }, [validateFile, generateUniqueFileName, getSignedUrl, uploadToS3]);
+    throw error;
+  } finally {
+    abortControllerRef.current = null;
+  }
+}, [validateFile]);
 
   /**
    * Upload multiple files
