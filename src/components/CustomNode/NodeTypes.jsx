@@ -292,6 +292,83 @@ export const ListNode = ({
 }) => {
   const listButtons = data.listButtons || [];
   
+  // Render header media preview
+  const renderHeaderMedia = () => {
+    if (data.headerType === 'image' && data.headerImageUrl) {
+      return (
+        <div className="mb-3">
+          <div className="relative w-full h-16 bg-gray-100 rounded border overflow-hidden">
+            <img 
+              src={data.headerImageUrl} 
+              alt="Header"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div className="hidden w-full h-full items-center justify-center">
+              <Icons.ImageOff size={16} className="text-gray-400" />
+            </div>
+          </div>
+          {data.headerImageUrlFileName && (
+            <div className="text-xs text-gray-500 mt-1 truncate">
+              📎 {data.headerImageUrlFileName}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (data.headerType === 'video' && data.headerVideoUrl) {
+      return (
+        <div className="mb-3">
+          <div className="relative w-full h-16 bg-gray-100 rounded border overflow-hidden">
+            <video 
+              src={data.headerVideoUrl}
+              className="w-full h-full object-cover"
+              muted
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div className="hidden w-full h-full items-center justify-center">
+              <Icons.VideoOff size={16} className="text-gray-400" />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-6 h-6 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                <Icons.Play size={10} className="text-white ml-0.5" />
+              </div>
+            </div>
+          </div>
+          {data.headerVideoUrlFileName && (
+            <div className="text-xs text-gray-500 mt-1 truncate">
+              📎 {data.headerVideoUrlFileName}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (data.headerType === 'document' && data.headerDocumentUrl) {
+      return (
+        <div className="mb-3">
+          <div className="w-full h-12 bg-gray-100 rounded border flex items-center justify-center p-2">
+            <div className="flex items-center space-x-2">
+              <Icons.FileText size={14} className="text-gray-400" />
+              <div className="text-xs text-gray-600 truncate">
+                {data.headerDocumentUrlFileName || 'Document'}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+  
   return (
     <div className="bg-white border-2 border-gray-200 rounded-xl shadow-lg min-w-[250px] sm:min-w-[280px] max-w-[320px] relative group">
       {/* Delete button */}
@@ -321,24 +398,35 @@ export const ListNode = ({
 
       {/* Content */}
       <div className="p-3 sm:p-4">
+        {/* Header Media Preview */}
+        {renderHeaderMedia()}
+
+        {/* Header Text */}
+        {data.header && (
+          <div className="text-xs sm:text-sm font-medium text-gray-800 mb-2">
+            {data.header}
+          </div>
+        )}
+
+        {/* Body Text */}
         <div className="text-xs sm:text-sm text-gray-600 mb-3">
           {data.text || 'Choose from the list:'}
         </div>
         
-        {/* List Items */}
+        {/* List Buttons */}
         <div className="space-y-2">
           {listButtons.length > 0 ? (
-            listButtons.map((listItem, index) => (
+            listButtons.map((listButton, index) => (
               <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg border border-gray-200 relative">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
                   <span className="text-xs sm:text-sm text-gray-700 truncate">
-                    {listItem.label || 'List item'}
+                    {listButton.label || 'Enter text'}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2 flex-shrink-0">
                   <div className="text-xs text-gray-400">
-                    {listItem.label ? `${listItem.label.length}/30` : '0/30'}
+                    {listButton.label ? `${listButton.label.length}/20` : '0/20'}
                   </div>
                   <div className="w-3 h-3 bg-blue-400 rounded-full border-2 border-white shadow-sm"></div>
                 </div>
@@ -350,10 +438,10 @@ export const ListNode = ({
                 <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                    <span className="text-xs sm:text-sm text-gray-400">List item {index + 1}</span>
+                    <span className="text-xs sm:text-sm text-gray-400">Enter text</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="text-xs text-gray-400">0/30</div>
+                    <div className="text-xs text-gray-400">0/20</div>
                     <div className="w-3 h-3 bg-gray-300 rounded-full border-2 border-white"></div>
                   </div>
                 </div>
@@ -361,6 +449,13 @@ export const ListNode = ({
             </>
           )}
         </div>
+
+        {/* Footer */}
+        {data.footer && (
+          <div className="text-xs text-gray-500 mt-3 text-center">
+            {data.footer}
+          </div>
+        )}
 
         {/* Add item button */}
         <div className="flex justify-end mt-3">
