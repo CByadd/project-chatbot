@@ -70,7 +70,7 @@ const CustomNode = memo(({ id, data, selected, onEdit, onDelete, onAddButtons })
           onEdit={handleEditClick} 
           onDelete={handleDeleteClick} 
         />
-        <ListNodeHandles listButtons={data.listButtons || []} />
+        <ListNodeHandles buttons={data.buttons || []} />
       </div>
     );
   }

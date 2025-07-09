@@ -8,8 +8,8 @@ const ListEditor = ({
   setFormData, 
   onOpenNodeSelector 
 }) => {
-  const addListButton = () => {
-    const newListButton = {
+  const addButton = () => {
+    const newButton = {
       label: '',
       description: '',
       imageUrl: '',
@@ -18,23 +18,23 @@ const ListEditor = ({
     
     setFormData(prev => ({
       ...prev,
-      listButtons: [...(prev.listButtons || []), newListButton]
+      buttons: [...(prev.buttons || []), newButton] // Changed from listButtons to buttons
     }));
   };
 
-  const updateListButton = (buttonIndex, field, value) => {
+  const updateButton = (buttonIndex, field, value) => {
     setFormData(prev => ({
       ...prev,
-      listButtons: prev.listButtons?.map((button, index) =>
+      buttons: prev.buttons?.map((button, index) =>
         index === buttonIndex ? { ...button, [field]: value } : button
       )
     }));
   };
 
-  const removeListButton = (buttonIndex) => {
+  const removeButton = (buttonIndex) => {
     setFormData(prev => ({
       ...prev,
-      listButtons: prev.listButtons?.filter((_, index) => index !== buttonIndex)
+      buttons: prev.buttons?.filter((_, index) => index !== buttonIndex)
     }));
   };
 
@@ -235,23 +235,23 @@ const ListEditor = ({
 
       {/* List Buttons Section */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">List Buttons (up to 10)</label>
+        <label className="block text-sm font-medium text-gray-700 mb-3">Buttons (up to 10)</label>
         <div className="space-y-3">
-          {(formData.listButtons || []).map((listButton, buttonIndex) => (
+          {(formData.buttons || []).map((button, buttonIndex) => (
             <div key={buttonIndex} className="space-y-2">
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <input
                   type="text"
-                  value={listButton.label || ''}
-                  onChange={(e) => updateListButton(buttonIndex, 'label', e.target.value)}
+                  value={button.label || ''}
+                  onChange={(e) => updateButton(buttonIndex, 'label', e.target.value)}
                   placeholder="Enter button text"
                   className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
                 />
                 <div className="text-xs text-gray-400 min-w-[40px] text-center">
-                  {(listButton.label || '').length}/20
+                  {(button.label || '').length}/20
                 </div>
                 <button
-                  onClick={() => removeListButton(buttonIndex)}
+                  onClick={() => removeButton(buttonIndex)}
                   className="text-red-500 hover:text-red-700 p-2 hover:bg-red-100 rounded-lg transition-colors flex-shrink-0"
                 >
                   <Icons.X size={16} />
@@ -265,11 +265,11 @@ const ListEditor = ({
                   className="flex-1 px-3 py-2 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors text-sm flex items-center justify-center"
                 >
                   <Icons.Link size={14} className="mr-2" />
-                  {listButton.nextNodeId ? `Connected to: ${listButton.nextNodeId}` : 'Connect to Node'}
+                  {button.nextNodeId ? `Connected to: ${button.nextNodeId}` : 'Connect to Node'}
                 </button>
-                {listButton.nextNodeId && (
+                {button.nextNodeId && (
                   <button
-                    onClick={() => updateListButton(buttonIndex, 'nextNodeId', '')}
+                    onClick={() => updateButton(buttonIndex, 'nextNodeId', '')}
                     className="px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm"
                   >
                     <Icons.Unlink size={14} />
@@ -280,9 +280,9 @@ const ListEditor = ({
           ))}
           
           {/* Add List Button */}
-          {(!formData.listButtons || formData.listButtons.length < 10) && (
+          {(!formData.buttons || formData.buttons.length < 10) && (
             <button
-              onClick={addListButton}
+              onClick={addButton}
               className="w-full py-2 sm:py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-yellow-300 hover:text-yellow-600 hover:bg-yellow-50 transition-colors flex items-center justify-center font-medium text-sm"
             >
               <Icons.Plus size={16} className="mr-2" />
