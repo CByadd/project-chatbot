@@ -180,20 +180,20 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
       }
 
       // Handle list button connections
-      if (node.data.listButtons) {
-        node.data.listButtons.forEach((listButton, index) => {
-          if (listButton.nextNodeId) {
-            const targetNode = nodes.find(n => n.id === listButton.nextNodeId);
+      if (node.data.type === 'list' && node.data.buttons) {
+        node.data.buttons.forEach((button, index) => {
+          if (button.nextNodeId) {
+            const targetNode = nodes.find(n => n.id === button.nextNodeId);
             if (targetNode) {
               newEdges.push({
-                id: `${node.id}-list-${index}-${listButton.nextNodeId}`,
+                id: `${node.id}-list-${index}-${button.nextNodeId}`,
                 source: node.id,
-                target: listButton.nextNodeId,
+                target: button.nextNodeId,
                 sourceHandle: `list-${index}`,
                 type: 'default',
                 animated: true,
                 style: { stroke: '#EAB308', strokeWidth: 2 },
-                label: listButton.label
+                label: button.label
               });
             }
           }
@@ -302,15 +302,15 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
 
     // Handle list button connections
     if (params.sourceHandle && params.sourceHandle.startsWith('list-')) {
-      const listIndex = parseInt(params.sourceHandle.split('-')[1]);
+      const buttonIndex = parseInt(params.sourceHandle.split('-')[1]);
       
       setNodes((nodes) =>
         nodes.map((node) => {
-          if (node.id === params.source && node.data.listButtons) {
-            const updatedListButtons = [...node.data.listButtons];
-            if (updatedListButtons[listIndex]) {
-              updatedListButtons[listIndex] = {
-                ...updatedListButtons[listIndex],
+          if (node.id === params.source && node.data.type === 'list' && node.data.buttons) {
+            const updatedButtons = [...node.data.buttons];
+            if (updatedButtons[buttonIndex]) {
+              updatedButtons[buttonIndex] = {
+                ...updatedButtons[buttonIndex],
                 nextNodeId: params.target
               };
             }
@@ -318,7 +318,7 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
               ...node,
               data: {
                 ...node.data,
-                listButtons: updatedListButtons
+                buttons: updatedButtons
               }
             };
           }
@@ -403,12 +403,12 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
         }
 
         // Remove from list button connections
-        if (node.data.listButtons) {
-          const updatedListButtons = node.data.listButtons.map(listButton => ({
-            ...listButton,
-            nextNodeId: listButton.nextNodeId === nodeId ? '' : listButton.nextNodeId
+        if (node.data.type === 'list' && node.data.buttons) {
+          const updatedButtons = node.data.buttons.map(button => ({
+            ...button,
+            nextNodeId: button.nextNodeId === nodeId ? '' : button.nextNodeId
           }));
-          updatedNode.data = { ...updatedNode.data, listButtons: updatedListButtons };
+          updatedNode.data = { ...updatedNode.data, buttons: updatedButtons };
         }
         
         // Remove from catalog connections
@@ -517,7 +517,7 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
           description: 'Interactive list buttons',
           messageType: 'list',
           text: 'Choose an option:',
-          listButtons: [],
+          buttons: [], // Changed from listButtons to buttons to match button node structure
           nextNodeId: ''
         },
         button: { 
