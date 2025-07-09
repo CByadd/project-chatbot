@@ -90,7 +90,7 @@ export const ButtonNode = ({
       {/* Delete button */}
       <button
         onClick={onDelete}
-        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-10 shadow-md"
+        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-50 shadow-md"
         title="Delete node"
       >
         <Icons.X size={14} />
@@ -199,7 +199,7 @@ export const CatalogNode = ({
       {/* Delete button */}
       <button
         onClick={onDelete}
-        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-10 shadow-md"
+        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-50 shadow-md"
         title="Delete node"
       >
         <Icons.X size={14} />
@@ -290,7 +290,7 @@ export const ListNode = ({
   onEdit, 
   onDelete 
 }) => {
-  const buttons = data.buttons || []; // Changed from listButtons to buttons
+  const listButtons = data.listButtons || [];
   
   // Render header media preview
   const renderHeaderMedia = () => {
@@ -374,7 +374,7 @@ export const ListNode = ({
       {/* Delete button */}
       <button
         onClick={onDelete}
-        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-10 shadow-md"
+        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-50 shadow-md"
         title="Delete node"
       >
         <Icons.X size={14} />
@@ -415,18 +415,18 @@ export const ListNode = ({
         
         {/* List Buttons */}
         <div className="space-y-2">
-          {buttons.length > 0 ? (
-            buttons.map((button, index) => (
+          {listButtons.length > 0 ? (
+            listButtons.map((listButton, index) => (
               <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg border border-gray-200 relative">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
                   <span className="text-xs sm:text-sm text-gray-700 truncate">
-                    {button.label || 'Enter text'}
+                    {listButton.label || 'Enter text'}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2 flex-shrink-0">
                   <div className="text-xs text-gray-400">
-                    {button.label ? `${button.label.length}/20` : '0/20'}
+                    {listButton.label ? `${listButton.label.length}/20` : '0/20'}
                   </div>
                   <div className="w-3 h-3 bg-blue-400 rounded-full border-2 border-white shadow-sm"></div>
                 </div>
@@ -613,7 +613,7 @@ export const StandardNode = ({
       {/* Delete button */}
       <button
         onClick={onDelete}
-        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-10 shadow-md"
+        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-50 shadow-md"
         title="Delete node"
       >
         <Icons.X size={14} />
@@ -694,10 +694,10 @@ export const StandardNode = ({
           {/* Media preview */}
           {renderMediaPreview()}
           
-          {data.type === 'list' && data.buttons && data.buttons.length > 0 && (
+          {data.listButtons && data.listButtons.length > 0 && (
             <div className="text-xs">
-              <span className="font-medium text-yellow-700">Buttons:</span>
-              <span className="ml-1 text-gray-600">{data.buttons.length} buttons</span>
+              <span className="font-medium text-yellow-700">List Items:</span>
+              <span className="ml-1 text-gray-600">{data.listButtons.length} items</span>
             </div>
           )}
 
