@@ -514,9 +514,9 @@ const FlowCanvas = ({ flowData, onFlowDataChange, onNodeEdit }) => {
         },
         list: { 
           label: 'List', 
-          description: 'Interactive list',
+          description: 'Interactive list buttons',
           messageType: 'list',
-          text: 'Choose from the list:',
+          text: 'Choose an option:',
           listButtons: [],
           nextNodeId: ''
         },
