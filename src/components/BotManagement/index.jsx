@@ -30,21 +30,27 @@ const BotManagement = ({ onCreateNew, onEditBot, onToggleSidebar }) => {
     try {
       // Try to load from API first
       const apiFlows = await flowAPI.getFlows();
-      console.log('✅ Flows loaded from API:', apiFlows.length);
+      console.log('✅ Flows loaded from API:', apiFlows);
       
       // Transform API data to match local format
       const transformedFlows = apiFlows.map(flow => ({
         id: flow.id,
         name: flow.name,
-        botName: flow.botName,
+        botName: flow.name, // Use name as botName for display
         description: flow.description || `Chatbot flow with ${flow.nodeCount || 0} nodes`,
         status: flow.status || 'draft',
         lastModified: flow.lastModified || flow.updatedAt || new Date().toISOString(),
         messageCount: flow.messageCount || 0,
-        flowNodes: flow.nodeCount || 0
+        flowNodes: flow.nodeCount || (flow.flowData?.nodes?.length || 0),
+        isPublished: flow.status === 'published' || flow.isPublished || false
       }));
       
+      console.log('🔄 Transformed flows:', transformedFlows);
       setBots(transformedFlows);
+      
+      // Also sync with localStorage for offline access
+      localStorage.setItem('saved-bots', JSON.stringify(transformedFlows));
+      
     } catch (apiError) {
       console.warn('⚠️ API load failed, falling back to localStorage:', apiError.message);
       
@@ -53,8 +59,8 @@ const BotManagement = ({ onCreateNew, onEditBot, onToggleSidebar }) => {
       if (savedBots) {
         try {
           const localBots = JSON.parse(savedBots);
+          console.log('✅ Flows loaded from localStorage:', localBots);
           setBots(localBots);
-          console.log('✅ Flows loaded from localStorage:', localBots.length);
         } catch (parseError) {
           console.error('❌ Error parsing localStorage data:', parseError);
           setBots([]);
@@ -73,18 +79,37 @@ const BotManagement = ({ onCreateNew, onEditBot, onToggleSidebar }) => {
     console.log('🔄 Toggling bot status:', { botId, currentStatus });
     
     try {
-      if (currentStatus === 'active') {
+      let updatedFlow;
+      
+      if (currentStatus === 'published' || currentStatus === 'active') {
         // Unpublish the bot
-        await flowAPI.unpublishFlow(botId);
-        console.log('⏸️ Bot unpublished successfully');
-      } else if (currentStatus === 'inactive') {
-        // Publish the bot (and deactivate others)
-        await flowAPI.publishFlow(botId);
-        console.log('🚀 Bot published successfully');
+        updatedFlow = await flowAPI.unpublishFlow(botId);
+        console.log('⏸️ Bot unpublished successfully:', updatedFlow);
+      } else {
+        // Publish the bot
+        updatedFlow = await flowAPI.publishFlow(botId);
+        console.log('🚀 Bot published successfully:', updatedFlow);
       }
       
-      // Reload flows to get updated status
-      await loadFlows();
+      // Update local state immediately for better UX
+      setBots(prevBots => 
+        prevBots.map(bot => {
+          if (bot.id === botId) {
+            return {
+              ...bot,
+              status: updatedFlow.status || (currentStatus === 'published' ? 'draft' : 'published'),
+              isPublished: updatedFlow.status === 'published' || updatedFlow.isPublished || false
+            };
+          }
+          return bot;
+        })
+      );
+      
+      // Reload flows to get the latest state from server
+      setTimeout(() => {
+        loadFlows();
+      }, 500);
+      
     } catch (error) {
       console.error('❌ Status toggle failed:', error);
       
@@ -92,19 +117,14 @@ const BotManagement = ({ onCreateNew, onEditBot, onToggleSidebar }) => {
       setBots(prevBots => {
         const updatedBots = prevBots.map(bot => {
           if (bot.id === botId) {
-            if (currentStatus === 'active') {
-              return { ...bot, status: 'inactive' };
-            } else if (currentStatus === 'inactive') {
-              return { ...bot, status: 'active' };
-            }
-            return bot;
-          } else {
-            // Deactivate all other bots when one is activated
-            if (currentStatus === 'inactive' && bot.status === 'active') {
-              return { ...bot, status: 'inactive' };
-            }
-            return bot;
+            const newStatus = (currentStatus === 'published' || currentStatus === 'active') ? 'draft' : 'published';
+            return { 
+              ...bot, 
+              status: newStatus,
+              isPublished: newStatus === 'published'
+            };
           }
+          return bot;
         });
         
         // Save to localStorage as backup
@@ -112,7 +132,7 @@ const BotManagement = ({ onCreateNew, onEditBot, onToggleSidebar }) => {
         return updatedBots;
       });
       
-      alert(`Failed to ${currentStatus === 'active' ? 'unpublish' : 'publish'} bot: ${error.message}`);
+      alert(`Failed to ${currentStatus === 'published' ? 'unpublish' : 'publish'} bot: ${error.message}`);
     }
   };
 
@@ -167,11 +187,20 @@ const BotManagement = ({ onCreateNew, onEditBot, onToggleSidebar }) => {
   const filteredBots = bots.filter(bot => {
     const matchesSearch = bot.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          bot.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || bot.status === filterStatus;
+    
+    let matchesFilter = true;
+    if (filterStatus === 'active') {
+      matchesFilter = bot.status === 'published' || bot.isPublished;
+    } else if (filterStatus === 'inactive') {
+      matchesFilter = bot.status !== 'published' && !bot.isPublished;
+    } else if (filterStatus !== 'all') {
+      matchesFilter = bot.status === filterStatus;
+    }
+    
     return matchesSearch && matchesFilter;
   });
 
-  const activeBotCount = bots.filter(bot => bot.status === 'active').length;
+  const activeBotCount = bots.filter(bot => bot.status === 'published' || bot.isPublished).length;
 
   return (
     <>
