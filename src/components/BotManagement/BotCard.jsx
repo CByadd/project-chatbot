@@ -1,17 +1,16 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
-import { useBotPublishing } from './../../hooks/useBotPublishing.js';
 
-const BotCard = ({ bot, onEdit, onDelete }) => {
-  const { isPublishing, handleTogglePublish } = useBotPublishing(bot.id);
-
-  // Determine if the bot is currently published based on `name === 'default'`
-  const isBotActive = bot.name === 'default';
-  const botStatus = isBotActive ? 'active' : 'inactive';
+const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
+  // Determine if the bot is currently published
+  const isBotActive = bot.status === 'published' || bot.isPublished || false;
+  const displayStatus = isBotActive ? 'active' : (bot.status || 'draft');
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'active':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'published':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'inactive':
         return 'bg-red-100 text-red-800 border-red-200';
@@ -25,6 +24,7 @@ const BotCard = ({ bot, onEdit, onDelete }) => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'active':
+      case 'published':
         return <Icons.CheckCircle size={14} className="text-green-600" />;
       case 'inactive':
         return <Icons.XCircle size={14} className="text-red-600" />;
@@ -32,6 +32,18 @@ const BotCard = ({ bot, onEdit, onDelete }) => {
         return <Icons.Clock size={14} className="text-yellow-600" />;
       default:
         return <Icons.Circle size={14} className="text-gray-600" />;
+    }
+  };
+
+  const handleTogglePublish = async (e) => {
+    e.stopPropagation();
+    
+    if (onToggleActive) {
+      try {
+        await onToggleActive(bot.id, bot.status);
+      } catch (error) {
+        console.error('Failed to toggle publish status:', error);
+      }
     }
   };
 
@@ -47,48 +59,31 @@ const BotCard = ({ bot, onEdit, onDelete }) => {
           </div>
 
           <div className="flex flex-col items-end space-y-2">
-            <div className={`px-2 py-1 rounded-full text-xs font-medium border flex items-center space-x-1 ${getStatusColor(botStatus)}`}>
-              {getStatusIcon(botStatus)}
-              <span className="capitalize">{botStatus}</span>
+            <div className={`px-2 py-1 rounded-full text-xs font-medium border flex items-center space-x-1 ${getStatusColor(displayStatus)}`}>
+              {getStatusIcon(displayStatus)}
+              <span className="capitalize">{displayStatus}</span>
             </div>
 
             <div className="flex items-center">
               <button
-                disabled={isPublishing}
-             onClick={(e) => {
-  e.stopPropagation();
-  handleTogglePublish(isBotActive ? 'unpublish' : 'publish')
-    .then(() => {
-      window.location.reload(); // 🔁 Hard refresh the full page
-    });
-}}
-
+                onClick={handleTogglePublish}
                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                   isBotActive ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-300 hover:bg-gray-400'
-                } ${isPublishing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                }`}
                 title={isBotActive ? 'Unpublish bot' : 'Publish bot'}
               >
-                {isPublishing ? (
-                  <span className="w-full flex justify-center items-center">
-                    <svg className="animate-spin h-3 w-3 text-white" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                  </span>
-                ) : (
-                  <span
-                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                      isBotActive ? 'translate-x-5' : 'translate-x-1'
-                    }`}
-                  />
-                )}
+                <span
+                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                    isBotActive ? 'translate-x-5' : 'translate-x-1'
+                  }`}
+                />
               </button>
             </div>
           </div>
         </div>
 
         <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-purple-600 transition-colors line-clamp-1">
-          {bot.botName}
+          {bot.botName || bot.name}
         </h3>
         <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
           {bot.description}
@@ -98,11 +93,11 @@ const BotCard = ({ bot, onEdit, onDelete }) => {
       <div className="p-4">
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">{bot.messageCount.toLocaleString()}</div>
+            <div className="text-lg font-bold text-gray-900">{(bot.messageCount || 0).toLocaleString()}</div>
             <div className="text-xs text-gray-500">Messages</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">{bot.flowNodes}</div>
+            <div className="text-lg font-bold text-gray-900">{bot.flowNodes || 0}</div>
             <div className="text-xs text-gray-500">Flow Nodes</div>
           </div>
         </div>
