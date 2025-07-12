@@ -35,6 +35,7 @@ function App() {
   const {
     flowData,
     editingNode,
+    isLoading,
     handleFlowDataChange,
     handleNodeEdit,
     handleCloseEditor
@@ -157,6 +158,7 @@ function App() {
         // Flow Data
         flowData={flowData}
         editingNode={editingNode}
+        isLoading={isLoading}
         onFlowDataChange={handleFlowDataChange}
         onNodeEdit={handleNodeEdit}
         onCloseEditor={handleCloseEditor}
