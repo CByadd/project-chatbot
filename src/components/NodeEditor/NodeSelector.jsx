@@ -33,7 +33,7 @@ const NodeSelector = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[3000] p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-gray-200 p-4 sm:p-6 flex-shrink-0">
           <h3 className="text-lg sm:text-xl font-bold text-gray-900">
