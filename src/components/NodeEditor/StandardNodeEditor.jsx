@@ -80,7 +80,7 @@ const StandardNodeEditor = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Trigger Keywords</label>
             <input
-              type="text"
+              acceptedTypes=".jpg,.jpeg,.png"
               value={formData.trigger || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, trigger: e.target.value }))}
               placeholder="hi, hello, start"

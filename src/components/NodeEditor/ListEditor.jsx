@@ -110,7 +110,7 @@ const ListEditor = ({
           ) : (
             <FileUploadButton
               onFileUploaded={(fileData) => handleMediaUploaded(fileData, 'headerImageUrl')}
-              acceptedTypes="image/*"
+              acceptedTypes=".jpg,.jpeg,.png"
               buttonText="Upload Header Image"
               buttonIcon="Image"
               maxSize={10 * 1024 * 1024} // 10MB
