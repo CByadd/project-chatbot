@@ -80,7 +80,7 @@ export const useFlowEditor = (currentBotId) => {
         console.log('📊 Setting flow data from API');
         
         // Set bot name from API
-        const displayName = flowFromAPI.name || `Bot ${botId}`;
+        const displayName = flowFromAPI.botName || `Bot ${botId}`;
         setBotName(displayName);
         
         // Set flow data - ensure all nodes are loaded

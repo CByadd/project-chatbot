@@ -2,20 +2,18 @@ import React from 'react';
 import * as Icons from 'lucide-react';
 
 const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
-  // Determine if the bot is currently published
-  const isBotActive = bot.status === 'published' || bot.isPublished === true;
-  const displayStatus = isBotActive ? 'published' : (bot.status || 'draft');
+  const isDefaultBot = (bot.name || bot.botName) === 'default';
+
+  const isBotActive = isDefaultBot ? true : (bot.status === 'published' || bot.isPublished === true);
+
+  // Display status for UI (published or saved only)
+  const displayStatus = isBotActive ? 'published' : 'saved';
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'active':
       case 'published':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'active':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'inactive':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'draft':
+      case 'saved':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -26,12 +24,8 @@ const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
     switch (status) {
       case 'published':
         return <Icons.CheckCircle size={14} className="text-green-600" />;
-      case 'active':
-        return <Icons.CheckCircle size={14} className="text-green-600" />;
-      case 'inactive':
-        return <Icons.XCircle size={14} className="text-red-600" />;
-      case 'draft':
-        return <Icons.Clock size={14} className="text-yellow-600" />;
+      case 'saved':
+        return <Icons.Save size={14} className="text-yellow-600" />;
       default:
         return <Icons.Circle size={14} className="text-gray-600" />;
     }
@@ -39,7 +33,9 @@ const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
 
   const handleTogglePublish = async (e) => {
     e.stopPropagation();
-    
+
+    if (isDefaultBot) return;
+
     if (onToggleActive) {
       try {
         await onToggleActive(bot.id, bot.status);
@@ -51,20 +47,10 @@ const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
 
   const handleEditClick = (e) => {
     e.stopPropagation();
-    console.log('🎯 Edit button clicked for bot:', {
-      botId: bot.id,
-      botName: bot.name || bot.botName,
-      status: bot.status
-    });
     onEdit(bot.id);
   };
 
   const handleCardClick = () => {
-    console.log('🎯 Card clicked for bot:', {
-      botId: bot.id,
-      botName: bot.name || bot.botName,
-      status: bot.status
-    });
     onEdit(bot.id);
   };
 
@@ -80,7 +66,11 @@ const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
           </div>
 
           <div className="flex flex-col items-end space-y-2">
-            <div className={`px-2 py-1 rounded-full text-xs font-medium border flex items-center space-x-1 ${getStatusColor(displayStatus)}`}>
+            <div
+              className={`px-2 py-1 rounded-full text-xs font-medium border flex items-center space-x-1 ${getStatusColor(
+                displayStatus
+              )}`}
+            >
               {getStatusIcon(displayStatus)}
               <span className="capitalize">{displayStatus}</span>
             </div>
@@ -90,8 +80,11 @@ const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
                 onClick={handleTogglePublish}
                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                   isBotActive ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-300 hover:bg-gray-400'
-                }`}
-                title={isBotActive ? 'Unpublish bot' : 'Publish bot'}
+                } ${isDefaultBot ? 'cursor-not-allowed opacity-60' : ''}`}
+                title={
+                  isDefaultBot ? 'Default bot' : isBotActive ? 'Unpublish bot' : 'Publish bot'
+                }
+                disabled={isDefaultBot}
               >
                 <span
                   className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
@@ -104,17 +97,17 @@ const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
         </div>
 
         <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-purple-600 transition-colors line-clamp-1">
-          {bot.botName || bot.name}
+          {bot.botName}
         </h3>
-        <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
-          {bot.description}
-        </p>
+        <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">{bot.description}</p>
       </div>
 
       <div className="p-4">
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">{(bot.messageCount || 0).toLocaleString()}</div>
+            <div className="text-lg font-bold text-gray-900">
+              {(bot.messageCount || 0).toLocaleString()}
+            </div>
             <div className="text-xs text-gray-500">Messages</div>
           </div>
           <div className="text-center">

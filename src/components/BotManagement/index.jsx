@@ -36,7 +36,7 @@ const BotManagement = ({ onCreateNew, onEditBot, onToggleSidebar }) => {
       const transformedFlows = apiFlows.map(flow => ({
         id: flow.id,
         name: flow.name,
-        botName: flow.name, // Use name as botName for display
+        botName: flow.botName, // Use name as botName for display
         description: flow.description || `Chatbot flow with ${flow.nodeCount || 0} nodes`,
         status: flow.status || 'draft',
         lastModified: flow.lastModified || flow.updatedAt || new Date().toISOString(),
