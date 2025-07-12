@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // Base URL configuration
 // const BASE_URL = import.meta.env.VITE_REACT_APP_API_URL || 'https://proto-server.onrender.com/api';
-const BASE_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:4000/api';
-// const BASE_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:5001/api';
+// const BASE_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:4000/api';
+const BASE_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:5001/api';
 
 // Create axios instance with base configuration
 const api = axios.create({
