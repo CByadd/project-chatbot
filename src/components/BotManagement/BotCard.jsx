@@ -47,10 +47,29 @@ const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
     }
   };
 
+  const handleEditClick = (e) => {
+    e.stopPropagation();
+    console.log('🎯 Edit button clicked for bot:', {
+      botId: bot.id,
+      botName: bot.name || bot.botName,
+      status: bot.status
+    });
+    onEdit(bot.id);
+  };
+
+  const handleCardClick = () => {
+    console.log('🎯 Card clicked for bot:', {
+      botId: bot.id,
+      botName: bot.name || bot.botName,
+      status: bot.status
+    });
+    onEdit(bot.id);
+  };
+
   return (
     <div
       className="bg-white rounded-xl border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all duration-200 overflow-hidden group cursor-pointer"
-      onClick={() => onEdit(bot.id)}
+      onClick={handleCardClick}
     >
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-start justify-between mb-3">
@@ -111,10 +130,7 @@ const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
       <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
         <div className="flex items-center justify-between">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(bot.id);
-            }}
+            onClick={handleEditClick}
             className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center"
           >
             <Icons.Edit2 size={14} className="mr-1" />
@@ -125,7 +141,7 @@ const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete(bot.id, bot.name);
+                onDelete(bot.id, bot.name || bot.botName);
               }}
               className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-colors"
               title="Delete"

@@ -7,6 +7,7 @@ import Header from './Header';
 import NodeEditor from './NodeEditor';
 import SaveModal from './SaveModal';
 import DatabaseSaveModal from './DatabaseSaveModal';
+import * as Icons from 'lucide-react';
 
 const EditorView = ({
   // UI State
@@ -44,7 +45,10 @@ const EditorView = ({
   dbError,
   onDatabaseSave,
   onCloseSaveModal,
-  onCloseDatabaseSaveModal
+  onCloseDatabaseSaveModal,
+  
+  // Loading state
+  isLoading
 }) => {
   const onDragStart = (event, nodeType) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
@@ -102,10 +106,20 @@ const EditorView = ({
             />
           </div>
           
-          <div className="flex-1 h-full min-w-0">
+          <div className="flex-1 h-full min-w-0 relative">
+            {/* Loading Overlay */}
+            {isLoading && (
+              <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                <div className="flex flex-col items-center space-y-3">
+                  <Icons.Loader2 size={32} className="animate-spin text-purple-600" />
+                  <p className="text-gray-600 font-medium">Loading flow data...</p>
+                </div>
+              </div>
+            )}
+            
             <ReactFlowProvider>
               <FlowCanvas 
-              flowData={flowData}
+                flowData={flowData}
                 onFlowDataChange={onFlowDataChange}
                 onNodeEdit={onNodeEdit}
               />

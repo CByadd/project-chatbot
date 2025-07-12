@@ -18,21 +18,46 @@ export const useBotManagement = () => {
   }, []);
 
   const handleEditBot = useCallback((botId) => {
-    console.log('✏️ Editing bot:', { botId });
+    console.log('✏️ Editing specific bot:', { 
+      botId, 
+      previousBotId: currentBotId,
+      isNewBot: botId !== currentBotId 
+    });
+    
+    // Always set the bot ID first, even if it's the same
+    // This ensures the flow editor reloads the correct data
     setCurrentBotId(botId);
-    setCurrentView('editor');
-  }, []);
+    
+    // Small delay to ensure bot ID is set before switching views
+    setTimeout(() => {
+      setCurrentView('editor');
+      console.log('✅ Switched to editor view for bot:', botId);
+    }, 50);
+  }, [currentBotId]);
 
   const handleBackToManagement = useCallback(() => {
-    console.log('🔙 Returning to management view');
+    console.log('🔙 Returning to management view from bot:', currentBotId);
     setCurrentView('management');
-    // Don't clear currentBotId here to maintain context
-  }, []);
+    // Don't clear currentBotId here to maintain context for potential return
+  }, [currentBotId]);
 
-  // New function to update bot ID after successful save
+  // Function to update bot ID after successful save
   const updateCurrentBotId = useCallback((newBotId) => {
     console.log('🆔 Updating current bot ID:', { from: currentBotId, to: newBotId });
     setCurrentBotId(newBotId);
+  }, [currentBotId]);
+
+  // Function to force refresh the current bot's data
+  const refreshCurrentBot = useCallback(() => {
+    if (currentBotId) {
+      console.log('🔄 Forcing refresh of current bot:', currentBotId);
+      // Temporarily clear and reset to force reload
+      const botId = currentBotId;
+      setCurrentBotId(null);
+      setTimeout(() => {
+        setCurrentBotId(botId);
+      }, 100);
+    }
   }, [currentBotId]);
 
   return {
@@ -42,6 +67,7 @@ export const useBotManagement = () => {
     updateCurrentBotId,
     handleCreateNewBot,
     handleEditBot,
-    handleBackToManagement
+    handleBackToManagement,
+    refreshCurrentBot
   };
 };
