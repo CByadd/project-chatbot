@@ -7,15 +7,20 @@ import { useBotSaving } from './hooks/useBotSaving';
 import { useBotPublishing } from './hooks/useBotPublishing';
 import { useUIState } from './hooks/useUIState';
 import { useAppInitialization } from './hooks/useAppInitialization';
+import { useToast } from './hooks/useToast';
 import ConnectionStatus from './components/ConnectionStatus';
 import ManagementView from './components/ManagementView';
 import EditorView from './components/EditorView';
 import SimpleAxiosDemo from './components/SimpleAxiosDemo';
+import Toast from './components/Toast';
 import 'reactflow/dist/style.css';
 
 function App() {
   // Initialize app
   useAppInitialization();
+
+  // Toast notifications
+  const { toasts, hideToast } = useToast();
 
   // Database connection
   const { connectionStatus } = useFlowDatabase();
@@ -197,6 +202,19 @@ function App() {
       
       {/* Simple Axios Demo Button */}
       <SimpleAxiosDemo />
+      
+      {/* Toast Notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          isOpen={toast.isOpen}
+          onClose={() => hideToast(toast.id)}
+          message={toast.message}
+          type={toast.type}
+          title={toast.title}
+          duration={toast.duration}
+        />
+      ))}
     </>
   );
 }

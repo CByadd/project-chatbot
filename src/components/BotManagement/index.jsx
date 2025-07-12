@@ -95,10 +95,12 @@ const BotManagement = ({ onCreateNew, onEditBot, onToggleSidebar }) => {
       setBots(prevBots => 
         prevBots.map(bot => {
           if (bot.id === botId) {
+            const newStatus = (currentStatus === 'published' || currentStatus === 'active') ? 'draft' : 'published';
+            const newIsPublished = newStatus === 'published';
             return {
               ...bot,
-              status: updatedFlow.status || (currentStatus === 'published' ? 'draft' : 'published'),
-              isPublished: updatedFlow.status === 'published' || updatedFlow.isPublished || false
+              status: updatedFlow.status || newStatus,
+              isPublished: updatedFlow.isPublished !== undefined ? updatedFlow.isPublished : newIsPublished
             };
           }
           return bot;

@@ -1,9 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useFlowDatabase } from './useFlowDatabase';
+import { useToast } from './useToast';
 
 export const useBotPublishing = (currentBotId) => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState(null);
+  const { showSuccess, showError } = useToast();
 
   const { publishFlow, unpublishFlow } = useFlowDatabase();
 
@@ -21,12 +23,12 @@ export const useBotPublishing = (currentBotId) => {
       console.log('🚀 Publishing bot:', currentBotId);
       const result = await publishFlow(currentBotId);
       console.log('✅ Bot published successfully:', result);
-      alert('Bot published successfully!');
+      showSuccess('Bot has been published successfully!', 'Published');
       
     } catch (error) {
       console.error('❌ Publish failed:', error);
       setPublishError(error.message);
-      alert(`Failed to publish bot: ${error.message}`);
+      showError(`Failed to publish bot: ${error.message}`, 'Publish Failed');
     } finally {
       setIsPublishing(false);
     }
@@ -46,14 +48,17 @@ export const useBotPublishing = (currentBotId) => {
       if (action === 'unpublish') {
         await unpublishFlow(currentBotId);
         console.log('⏸️ Bot unpublished successfully');
+        showSuccess('Bot has been unpublished successfully!', 'Unpublished');
       } else if (action === 'publish') {
         await publishFlow(currentBotId);
         console.log('🚀 Bot published successfully');
+        showSuccess('Bot has been published successfully!', 'Published');
       }
 
     } catch (error) {
       console.error('❌ Toggle publish failed:', error);
       setPublishError(error.message);
+      showError(`Failed to ${action} bot: ${error.message}`, 'Operation Failed');
       throw error; // Re-throw to let the caller handle it
     } finally {
       setIsPublishing(false);
@@ -64,6 +69,8 @@ export const useBotPublishing = (currentBotId) => {
     isPublishing,
     publishError,
     handlePublish,
-    handleTogglePublish
+    handleTogglePublish,
+    showSuccess,
+    showError
   };
 };

@@ -3,14 +3,15 @@ import * as Icons from 'lucide-react';
 
 const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
   // Determine if the bot is currently published
-  const isBotActive = bot.status === 'published' || bot.isPublished || false;
-  const displayStatus = isBotActive ? 'active' : (bot.status || 'draft');
+  const isBotActive = bot.status === 'published' || bot.isPublished === true;
+  const displayStatus = isBotActive ? 'published' : (bot.status || 'draft');
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800 border-green-200';
       case 'published':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'active':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'inactive':
         return 'bg-red-100 text-red-800 border-red-200';
@@ -23,8 +24,9 @@ const BotCard = ({ bot, onEdit, onDelete, onToggleActive }) => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'active':
       case 'published':
+        return <Icons.CheckCircle size={14} className="text-green-600" />;
+      case 'active':
         return <Icons.CheckCircle size={14} className="text-green-600" />;
       case 'inactive':
         return <Icons.XCircle size={14} className="text-red-600" />;
