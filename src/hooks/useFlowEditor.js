@@ -4,8 +4,10 @@ import { flowAPI } from '../services/api';
 export const useFlowEditor = (currentBotId) => {
   const [flowData, setFlowData] = useState({ nodes: [], edges: [] });
   const [editingNode, setEditingNode] = useState(null);
-  const lastBotIdRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [botName, setBotName] = useState('');
+  const lastBotIdRef = useRef(null);
+  const loadingTimeoutRef = useRef(null);
 
   // Load flow data when bot ID changes
   useEffect(() => {
@@ -16,6 +18,11 @@ export const useFlowEditor = (currentBotId) => {
       isSwitchingBots: lastBotIdRef.current !== currentBotId
     });
     
+    // Clear any pending loading timeout
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+    
     // Always update the ref to track changes
     const previousBotId = lastBotIdRef.current;
     lastBotIdRef.current = currentBotId;
@@ -24,21 +31,38 @@ export const useFlowEditor = (currentBotId) => {
       // New bot - always start completely fresh
       console.log('🆕 New bot detected - clearing all flow data');
       setFlowData({ nodes: [], edges: [] });
+      setBotName('New Chatbot Flow');
       setIsLoading(false);
     } else if (currentBotId !== previousBotId) {
       // Switching to a different existing bot - load its specific data
       console.log('🔄 Switching to existing bot:', currentBotId);
-      loadFlowData(currentBotId);
+      
+      // Set loading state immediately
+      setIsLoading(true);
+      
+      // Add a small delay to prevent rapid switching glitches
+      loadingTimeoutRef.current = setTimeout(() => {
+        loadFlowData(currentBotId);
+      }, 100);
     }
   }, [currentBotId]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const loadFlowData = async (botId) => {
     if (!botId) {
       console.log('❌ No bot ID provided to loadFlowData');
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
     console.log('📖 Loading flow data for specific bot:', botId);
     
     try {
@@ -54,18 +78,24 @@ export const useFlowEditor = (currentBotId) => {
       
       if (flowFromAPI && flowFromAPI.flowData) {
         console.log('📊 Setting flow data from API');
-        setFlowData(flowFromAPI.flowData);
+        
+        // Set bot name from API
+        const displayName = flowFromAPI.name || `Bot ${botId}`;
+        setBotName(displayName);
+        
+        // Set flow data - ensure all nodes are loaded
+        const completeFlowData = {
+          nodes: flowFromAPI.flowData.nodes || [],
+          edges: flowFromAPI.flowData.edges || []
+        };
+        setFlowData(completeFlowData);
         
         // Also save to localStorage as backup for this specific bot
         const storageKey = `chatbot-flow-${botId}`;
-        localStorage.setItem(storageKey, JSON.stringify(flowFromAPI.flowData));
+        localStorage.setItem(storageKey, JSON.stringify(completeFlowData));
+        localStorage.setItem(`chatbot-name-${botId}`, displayName);
         
-        // Save bot name if available
-        if (flowFromAPI.name) {
-          localStorage.setItem(`chatbot-name-${botId}`, flowFromAPI.name);
-        }
-        
-        console.log('💾 Flow data cached locally for bot:', botId);
+        console.log('💾 Flow data cached locally for bot:', botId, 'with', completeFlowData.nodes.length, 'nodes');
         setIsLoading(false);
         return;
       }
@@ -77,6 +107,7 @@ export const useFlowEditor = (currentBotId) => {
     console.log('💾 Falling back to localStorage for bot:', botId);
     const storageKey = `chatbot-flow-${botId}`;
     const savedData = localStorage.getItem(storageKey);
+    const savedName = localStorage.getItem(`chatbot-name-${botId}`);
     
     if (savedData) {
       try {
@@ -85,14 +116,27 @@ export const useFlowEditor = (currentBotId) => {
           nodeCount: parsedData.nodes?.length || 0,
           edgeCount: parsedData.edges?.length || 0
         });
-        setFlowData(parsedData);
+        
+        // Ensure all nodes are included
+        const completeFlowData = {
+          nodes: parsedData.nodes || [],
+          edges: parsedData.edges || []
+        };
+        setFlowData(completeFlowData);
+        
+        // Set bot name
+        const displayName = savedName || `Bot ${botId}`;
+        setBotName(displayName);
+        
       } catch (error) {
         console.error('❌ Error parsing saved flow data for bot', botId, ':', error);
         setFlowData({ nodes: [], edges: [] });
+        setBotName(`Bot ${botId}`);
       }
     } else {
       console.log('📝 No saved data found for bot', botId, ', starting with empty flow');
       setFlowData({ nodes: [], edges: [] });
+      setBotName(`Bot ${botId}`);
     }
     
     setIsLoading(false);
@@ -105,13 +149,19 @@ export const useFlowEditor = (currentBotId) => {
       isNewBot: currentBotId === null
     });
     
-    setFlowData(newFlowData);
+    // Ensure all nodes and edges are preserved
+    const completeFlowData = {
+      nodes: newFlowData.nodes || [],
+      edges: newFlowData.edges || []
+    };
+    
+    setFlowData(completeFlowData);
     
     // Auto-save to localStorage for current session (only if we have a bot ID)
     if (currentBotId) {
       const storageKey = `chatbot-flow-${currentBotId}`;
-      localStorage.setItem(storageKey, JSON.stringify(newFlowData));
-      console.log('💾 Auto-saved to localStorage for bot:', currentBotId);
+      localStorage.setItem(storageKey, JSON.stringify(completeFlowData));
+      console.log('💾 Auto-saved to localStorage for bot:', currentBotId, 'with', completeFlowData.nodes.length, 'nodes');
     } else {
       console.log('⏭️ Skipping auto-save for new bot (no ID yet)');
     }
@@ -127,13 +177,22 @@ export const useFlowEditor = (currentBotId) => {
     setEditingNode(null);
   }, [currentBotId]);
 
+  const updateBotName = useCallback((newName) => {
+    setBotName(newName);
+    if (currentBotId) {
+      localStorage.setItem(`chatbot-name-${currentBotId}`, newName);
+    }
+  }, [currentBotId]);
+
   return {
     flowData,
     editingNode,
     isLoading,
+    botName,
     handleFlowDataChange,
     handleNodeEdit,
     handleCloseEditor,
+    updateBotName,
     loadFlowData // Expose this for manual reloading if needed
   };
 };
