@@ -4,7 +4,7 @@ import { useFileUpload } from '../../hooks/useFileUpload';
 
 const FileUploadButton = ({ 
   onFileUploaded, 
-  acceptedTypes = "image/*,video/*,.pdf,.doc,.docx,.txt",
+  acceptedTypes = ".jpg,.jpeg,.png",
   maxSize = 50 * 1024 * 1024, // 50MB
   buttonText = "Upload File",
   buttonIcon = "Upload",
@@ -23,6 +23,14 @@ const FileUploadButton = ({
     clearError,
     formatFileSize
   } = useFileUpload();
+
+  // Override accepted types for image uploads
+  const getAcceptedTypes = () => {
+    if (fileCategory === 'image') {
+      return '.jpg,.jpeg,.png';
+    }
+    return acceptedTypes;
+  };
 
   const handleFileSelect = () => {
     clearError();
@@ -93,7 +101,7 @@ const FileUploadButton = ({
       <input
         ref={fileInputRef}
         type="file"
-        accept={acceptedTypes}
+        accept={getAcceptedTypes()}
         onChange={handleFileChange}
         className="hidden"
         disabled={disabled || isUploading}
