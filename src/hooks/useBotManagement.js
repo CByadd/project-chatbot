@@ -24,15 +24,23 @@ export const useBotManagement = () => {
       isNewBot: botId !== currentBotId 
     });
     
-    // Always set the bot ID first, even if it's the same
-    // This ensures the flow editor reloads the correct data
-    setCurrentBotId(botId);
-    
-    // Small delay to ensure bot ID is set before switching views
-    setTimeout(() => {
-      setCurrentView('editor');
-      console.log('✅ Switched to editor view for bot:', botId);
-    }, 50);
+    // Force clear current bot ID first to prevent glitching
+    if (currentBotId === botId) {
+      setCurrentBotId(null);
+      setTimeout(() => {
+        setCurrentBotId(botId);
+        setTimeout(() => {
+          setCurrentView('editor');
+          console.log('✅ Switched to editor view for bot:', botId);
+        }, 100);
+      }, 50);
+    } else {
+      setCurrentBotId(botId);
+      setTimeout(() => {
+        setCurrentView('editor');
+        console.log('✅ Switched to editor view for bot:', botId);
+      }, 100);
+    }
   }, [currentBotId]);
 
   const handleBackToManagement = useCallback(() => {
