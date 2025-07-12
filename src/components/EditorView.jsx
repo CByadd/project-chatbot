@@ -19,6 +19,8 @@ const EditorView = ({
   // Flow Data
   flowData,
   editingNode,
+  botName,
+  onBotNameChange,
   onFlowDataChange,
   onNodeEdit,
   onCloseEditor,
@@ -79,6 +81,8 @@ const EditorView = ({
           flowData={flowData}
           onBack={onBack}
           botId={currentBotId}
+          botName={botName}
+          onBotNameChange={onBotNameChange}
           onToggleSidebar={onToggleSidebar}
           onToggleComponentPanel={onToggleComponentPanel}
           onSave={onSave}

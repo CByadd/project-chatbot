@@ -36,6 +36,8 @@ function App() {
     flowData,
     editingNode,
     isLoading,
+    botName,
+    updateBotName,
     handleFlowDataChange,
     handleNodeEdit,
     handleCloseEditor
@@ -159,6 +161,8 @@ function App() {
         flowData={flowData}
         editingNode={editingNode}
         isLoading={isLoading}
+        botName={botName}
+        onBotNameChange={updateBotName}
         onFlowDataChange={handleFlowDataChange}
         onNodeEdit={handleNodeEdit}
         onCloseEditor={handleCloseEditor}
